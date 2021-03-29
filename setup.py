@@ -17,5 +17,6 @@ setup(
     author_email='dewberryants@gmail.com',
     url='https://github.com/dewberryants/oGUIlem',
     license=lic,
-    packages=packages
+    packages=packages,
+    package_data={'': ['*.xml']}
 )

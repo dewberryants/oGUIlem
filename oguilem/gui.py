@@ -1,16 +1,13 @@
 import PyQt5.QtWidgets as qW
 
+from config import OGUILEMConfig
+
 
 def run_app(argv: list):
     app = qW.QApplication(argv)
     main_window = OGUILEMMainWindow()
     main_window.show()
     app.exec_()
-
-
-class OGUILEMConfig:
-    def __init__(self):
-        pass
 
 
 class OGUILEMMainWindow(qW.QMainWindow):
@@ -79,9 +76,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         runtype = qW.QFormLayout()
         runtype.addWidget(qW.QLabel("Runtype"))
-        runtype_box = qW.QComboBox()
-        runtype_box.addItem("Cluster")
-        runtype_box.addItem("Cluster on Surface")
+        runtype_box = OGUILEMRunTypeBox(self.config.get_runtypes())
         runtype.addWidget(runtype_box)
 
         layout1.addLayout(runtype)
@@ -116,6 +111,11 @@ class OGUILEMCalcInfoTab(qW.QWidget):
         columns.addLayout(layout2)
 
         self.setLayout(columns)
+
+
+class OGUILEMRunTypeBox(qW.QComboBox):
+    def __init__(self, runtypes):
+        super().__init__()
 
 
 class QHLine(qW.QFrame):

@@ -1,0 +1,5 @@
+<data>
+    <runtype name="Cluster">
+        Run a global optimization of atom or molecule clusters.
+    </runtype>
+</data>
