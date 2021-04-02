@@ -1,6 +1,6 @@
 import PyQt5.QtWidgets as qW
 
-from config import OGUILEMConfig
+from config import OGUILEMConfig, SmartNodeDelegate
 
 
 def run_app(argv: list):
@@ -44,6 +44,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
         calc_menu.addAction(q_abort)
 
         self.setCentralWidget(OGUILEMCalcWidget(self.config))
+        self.setWindowTitle("oGUIlem")
 
 
 class OGUILEMCalcWidget(qW.QWidget):
@@ -76,7 +77,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         runtype = qW.QFormLayout()
         runtype.addWidget(qW.QLabel("Runtype"))
-        runtype_box = OGUILEMRunTypeBox(self.config.get_runtypes())
+        runtype_box = OGUILEMRunTypeBox(self.config)
         runtype.addWidget(runtype_box)
 
         layout1.addLayout(runtype)
@@ -84,8 +85,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         operators = qW.QFormLayout()
         operators.addWidget(qW.QLabel("Genetic Algorithm"))
-        operators.addWidget(qW.QLabel("Crossover operators:"))
-        operators.addWidget(qW.QListView())
+        operators.addWidget(OGUILEMCrossOverBox(self.config))
         operators.addWidget(qW.QLabel("Mutation operators:"))
         operators.addWidget(qW.QListView())
 
@@ -114,8 +114,13 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
 
 class OGUILEMRunTypeBox(qW.QComboBox):
-    def __init__(self, runtypes):
+    def __init__(self, config: OGUILEMConfig):
         super().__init__()
+        self.setModel(config.runtype.get_model())
+        config.set_runtype(self.get_current_id())
+
+    def get_current_id(self):
+        return self.model().item(self.currentIndex()).id
 
 
 class QHLine(qW.QFrame):
@@ -123,3 +128,49 @@ class QHLine(qW.QFrame):
         super().__init__()
         self.setFrameShape(qW.QFrame.HLine)
         self.setFrameShadow(qW.QFrame.Sunken)
+
+
+class OGUILEMCrossOverBox(qW.QWidget):
+    def __init__(self, config: OGUILEMConfig, parent=None):
+        super().__init__(parent)
+        self.config = config
+
+        layout = qW.QGridLayout()
+        layout.addWidget(qW.QLabel("Crossover operators:"), 0, 0)
+        self.edit = qW.QLineEdit()
+        self.edit.setReadOnly(True)
+        layout.addWidget(self.edit, 1, 0)
+        self.btn = qW.QPushButton("Edit...")
+        self.btn.clicked.connect(self.open_edit)
+        layout.addWidget(self.btn, 1, 1)
+        self.setLayout(layout)
+
+    def open_edit(self):
+        popup = OGUILEMCrossOverDialog(self)
+        popup.exec()
+
+
+class OGUILEMCrossOverDialog(qW.QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+        assert(parent.config is not None)
+        self.tree = qW.QTreeView()
+        self.tree.setItemDelegate(SmartNodeDelegate())
+        self.tree.setModel(parent.config.crossover.get_model())
+        self.tree.setHeaderHidden(True)
+        hlayout = qW.QHBoxLayout()
+        vlayout = qW.QVBoxLayout()
+        btn1 = qW.QPushButton("Cancel")
+        btn1.clicked.connect(self.reject)
+        btn2 = qW.QPushButton("Accept")
+        btn2.clicked.connect(self.accept)
+        vlayout.addWidget(self.tree)
+        hlayout.addWidget(btn2)
+        hlayout.addWidget(btn1)
+        vlayout.addLayout(hlayout)
+        self.setLayout(vlayout)
+        self.setWindowTitle("Edit Crossover Operators...")
+
+    def accept(self) -> None:
+        self.parent().config.crossover.from_model(self.tree.model())
+        super().accept()
