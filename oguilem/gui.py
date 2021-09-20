@@ -1,6 +1,7 @@
 import PyQt5.QtWidgets as qW
+from PyQt5.QtGui import QStandardItem
 
-from config import OGUILEMConfig, SmartNodeDelegate
+from config import OGUILEMConfig, CrossOverEditDelegate
 
 
 def run_app(argv: list):
@@ -155,7 +156,7 @@ class OGUILEMCrossOverDialog(qW.QDialog):
         super().__init__(parent)
         assert(parent.config is not None)
         self.tree = qW.QTreeView()
-        self.tree.setItemDelegate(SmartNodeDelegate())
+        self.tree.setItemDelegate(CrossOverEditDelegate(self))
         self.tree.setModel(parent.config.crossover.get_model())
         self.tree.setHeaderHidden(True)
         hlayout = qW.QHBoxLayout()
@@ -170,7 +171,23 @@ class OGUILEMCrossOverDialog(qW.QDialog):
         vlayout.addLayout(hlayout)
         self.setLayout(vlayout)
         self.setWindowTitle("Edit Crossover Operators...")
+        self.add_new()
+
+    def add_item(self, item: QStandardItem):
+        self.tree.model().invisibleRootItem().appendRow(item)
+
+    def add_new(self):
+        model = self.tree.model()
+        self.remove_new()
+        model.appendRow(QStandardItem("New..."))
+
+    def remove_new(self):
+        model = self.tree.model()
+        btns = model.findItems("New...")
+        for new_btn in btns:
+            model.takeRow(new_btn.row())
 
     def accept(self) -> None:
+        self.remove_new()
         self.parent().config.crossover.from_model(self.tree.model())
         super().accept()

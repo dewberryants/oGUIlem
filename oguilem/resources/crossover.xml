@@ -1,7 +1,15 @@
 <crossovers>
-    <crossover name="Sweden" id="sweden">
+    <crossover name="Sweden" id="swd">
         Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic operation that will likely produce good results in almost all run types.
         <option name="Cut Style" id="cutstyle">
+            Customize the cut style.
+            <option name="1" id="1">1</option>
+            <option name="2" id="2">2</option>
+        </option>
+    </crossover>
+    <crossover name="Portugal" id="port">
+        Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic operation that will likely produce good results in almost all run types.
+        <option name="Number" id="nmbr">
             Customize the cut style.
             <option name="1" id="1">1</option>
             <option name="2" id="2">2</option>
