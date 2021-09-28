@@ -1,5 +1,4 @@
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QStyledItemDelegate, QComboBox
 from resources import runtypes, crossovers
 
 
@@ -29,13 +28,27 @@ class OGUILEMRunTypeConfig:
 
 class OGUILEMXOverConfig:
     def __init__(self):
+        self.choices = QStandardItemModel()
+        parent = self.choices.invisibleRootItem()
+        for key in crossovers:
+            parent.appendRow(_NodeItem(crossovers[key]))
         self.model = QStandardItemModel()
+        self.model.setHorizontalHeaderItem(0, QStandardItem(""))
+        self.model.setHorizontalHeaderItem(1, QStandardItem(""))
 
     def get_model(self):
         return self.model
 
     def from_model(self, model):
         self.model = model
+
+    def get_choices(self):
+        return self.choices
+
+    def add_choice_to_model(self, index):
+        item = self.choices.item(index, 0)
+        if item is not None and item.__class__ is _NodeItem:
+            self.model.appendRow(item.clone())
 
 
 class _NodeItem(QStandardItem):
@@ -52,7 +65,7 @@ class _NodeItem(QStandardItem):
                 self.appendRow(_NodeItem(opt))
         self.setEditable(False)
 
-    def clone(self) -> '_NodeItem':
+    def clone(self):
         ret = super().clone()
         rows = self.rowCount()
         if rows > 0:
@@ -61,34 +74,4 @@ class _NodeItem(QStandardItem):
         return ret
 
 
-class CrossOverEditDelegate(QStyledItemDelegate):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.xover_model = QStandardItemModel()
-        root = self.xover_model.invisibleRootItem()
-        for key in crossovers:
-            root.appendRow(_NodeItem(crossovers[key]))
-
-    def createEditor(self, parent, option, index):
-        editor = QComboBox(parent)
-        editor.currentIndexChanged.connect(self.parent().add_new)
-        editor.setFrame(False)
-        editor.setModel(self.xover_model)
-        editor.setCurrentIndex(-1)
-        print(index.model().setItemData(index, {0: ""}))
-        return editor
-
-    def setModelData(self, editor, model, index):
-        # if editor.currentIndex() != -1:
-        #    super().setModelData(editor, model, index)
-        # else:
-        curr_item = self.xover_model.findItems(editor.currentText())
-        index.model().removeRow(index.row())
-        if len(curr_item) == 1:
-            itm = curr_item[0].clone()
-            itm.setEditable(True)
-            self.parent().add_item(itm)
-        self.parent().add_new()
-
-    def updateEditorGeometry(self, editor, option, index):
-        editor.setGeometry(option.rect)
+instance = OGUILEMConfig()

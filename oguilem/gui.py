@@ -1,7 +1,6 @@
 import PyQt5.QtWidgets as qW
-from PyQt5.QtGui import QStandardItem
 
-from config import OGUILEMConfig, CrossOverEditDelegate
+from config import instance as conf
 
 
 def run_app(argv: list):
@@ -14,7 +13,6 @@ def run_app(argv: list):
 class OGUILEMMainWindow(qW.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.config = OGUILEMConfig()
         self.init_ui()
 
     def init_ui(self):
@@ -44,19 +42,19 @@ class OGUILEMMainWindow(qW.QMainWindow):
         q_abort.setEnabled(False)
         calc_menu.addAction(q_abort)
 
-        self.setCentralWidget(OGUILEMCalcWidget(self.config))
+        self.setCentralWidget(OGUILEMCalcWidget())
         self.setWindowTitle("oGUIlem")
 
 
 class OGUILEMCalcWidget(qW.QWidget):
-    def __init__(self, config: OGUILEMConfig):
+    def __init__(self):
         super().__init__()
         layout = qW.QVBoxLayout()
         tabs = qW.QTabWidget()
-        tabs.addTab(OGUILEMCalcInfoTab(config), "Main")
-        tabs.addTab(OGUILEMCalcInfoTab(config), "Geometry")
-        tabs.addTab(OGUILEMCalcInfoTab(config), "Environment")
-        tabs.addTab(OGUILEMCalcInfoTab(config), "Advanced")
+        tabs.addTab(OGUILEMCalcInfoTab(), "Main")
+        tabs.addTab(OGUILEMCalcInfoTab(), "Geometry")
+        tabs.addTab(OGUILEMCalcInfoTab(), "Environment")
+        tabs.addTab(OGUILEMCalcInfoTab(), "Advanced")
         tabs.setTabEnabled(1, False)
         tabs.setTabEnabled(2, False)
         tabs.setTabEnabled(3, False)
@@ -66,9 +64,8 @@ class OGUILEMCalcWidget(qW.QWidget):
 
 
 class OGUILEMCalcInfoTab(qW.QWidget):
-    def __init__(self, config):
+    def __init__(self):
         super().__init__()
-        self.config = config
         self.init_ui()
 
     def init_ui(self):
@@ -78,7 +75,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         runtype = qW.QFormLayout()
         runtype.addWidget(qW.QLabel("Runtype"))
-        runtype_box = OGUILEMRunTypeBox(self.config)
+        runtype_box = OGUILEMRunTypeBox()
         runtype.addWidget(runtype_box)
 
         layout1.addLayout(runtype)
@@ -86,7 +83,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         operators = qW.QFormLayout()
         operators.addWidget(qW.QLabel("Genetic Algorithm"))
-        operators.addWidget(OGUILEMCrossOverBox(self.config))
+        operators.addWidget(OGUILEMCrossOverBox())
         operators.addWidget(qW.QLabel("Mutation operators:"))
         operators.addWidget(qW.QListView())
 
@@ -115,10 +112,10 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
 
 class OGUILEMRunTypeBox(qW.QComboBox):
-    def __init__(self, config: OGUILEMConfig):
+    def __init__(self):
         super().__init__()
-        self.setModel(config.runtype.get_model())
-        config.set_runtype(self.get_current_id())
+        self.setModel(conf.runtype.get_model())
+        conf.set_runtype(self.get_current_id())
 
     def get_current_id(self):
         return self.model().item(self.currentIndex()).id
@@ -132,9 +129,8 @@ class QHLine(qW.QFrame):
 
 
 class OGUILEMCrossOverBox(qW.QWidget):
-    def __init__(self, config: OGUILEMConfig, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.config = config
 
         layout = qW.QGridLayout()
         layout.addWidget(qW.QLabel("Crossover operators:"), 0, 0)
@@ -154,40 +150,33 @@ class OGUILEMCrossOverBox(qW.QWidget):
 class OGUILEMCrossOverDialog(qW.QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        assert(parent.config is not None)
         self.tree = qW.QTreeView()
-        self.tree.setItemDelegate(CrossOverEditDelegate(self))
-        self.tree.setModel(parent.config.crossover.get_model())
-        self.tree.setHeaderHidden(True)
-        hlayout = qW.QHBoxLayout()
-        vlayout = qW.QVBoxLayout()
-        btn1 = qW.QPushButton("Cancel")
-        btn1.clicked.connect(self.reject)
-        btn2 = qW.QPushButton("Accept")
-        btn2.clicked.connect(self.accept)
-        vlayout.addWidget(self.tree)
-        hlayout.addWidget(btn2)
-        hlayout.addWidget(btn1)
-        vlayout.addLayout(hlayout)
-        self.setLayout(vlayout)
-        self.setWindowTitle("Edit Crossover Operators...")
-        self.add_new()
+        self.tree.setModel(conf.crossover.get_model())
+        layout = qW.QVBoxLayout()
+        line1_layout = qW.QHBoxLayout()
+        self.combo_box = qW.QComboBox()
+        self.combo_box.setModel(conf.crossover.get_choices())
+        line1_layout.addWidget(self.combo_box)
+        plus_button = qW.QPushButton("+")
+        plus_button.setStyleSheet("min-width: 30px; max-width:30px")
+        plus_button.clicked.connect(self.add_entry)
+        minus_button = qW.QPushButton("-")
+        minus_button.setStyleSheet("min-width: 30px; max-width:30px")
+        minus_button.clicked.connect(lambda: self.remove_entry(self.tree.selectedIndexes()))
+        line1_layout.addWidget(plus_button)
+        line1_layout.addWidget(minus_button)
+        layout.addLayout(line1_layout)
+        layout.addWidget(self.tree)
+        self.setLayout(layout)
+        self.setWindowTitle("Crossovers")
 
-    def add_item(self, item: QStandardItem):
-        self.tree.model().invisibleRootItem().appendRow(item)
+    def add_entry(self):
+        conf.crossover.add_choice_to_model(self.combo_box.currentIndex())
 
-    def add_new(self):
-        model = self.tree.model()
-        self.remove_new()
-        model.appendRow(QStandardItem("New..."))
-
-    def remove_new(self):
-        model = self.tree.model()
-        btns = model.findItems("New...")
-        for new_btn in btns:
-            model.takeRow(new_btn.row())
-
-    def accept(self) -> None:
-        self.remove_new()
-        self.parent().config.crossover.from_model(self.tree.model())
-        super().accept()
+    def remove_entry(self, indices):
+        rows = set()
+        for index in indices:
+            rows.add(index.row())
+        for row in rows:
+            self.tree.model().removeRow(row)
+            break
