@@ -52,10 +52,9 @@ class OGUILEMCalcWidget(qW.QWidget):
         layout = qW.QVBoxLayout()
         tabs = qW.QTabWidget()
         tabs.addTab(OGUILEMCalcInfoTab(), "Main")
-        tabs.addTab(OGUILEMCalcInfoTab(), "Geometry")
+        tabs.addTab(OGUILEMGeometryTab(), "Geometry")
         tabs.addTab(OGUILEMCalcInfoTab(), "Environment")
         tabs.addTab(OGUILEMCalcInfoTab(), "Advanced")
-        tabs.setTabEnabled(1, False)
         tabs.setTabEnabled(2, False)
         tabs.setTabEnabled(3, False)
 
@@ -71,44 +70,94 @@ class OGUILEMCalcInfoTab(qW.QWidget):
     def init_ui(self):
         columns = qW.QHBoxLayout()
 
-        layout1 = qW.QVBoxLayout()
+        layout_left = qW.QVBoxLayout()
 
-        runtype = qW.QFormLayout()
-        runtype.addWidget(qW.QLabel("Runtype"))
-        runtype_box = OGUILEMRunTypeBox()
-        runtype.addWidget(runtype_box)
+        runtype_group = qW.QGroupBox("Run Type")
+        runtype_group.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        runtype_layout = qW.QFormLayout()
+        runtype_layout.addWidget(OGUILEMRunTypeBox())
+        runtype_group.setLayout(runtype_layout)
 
-        layout1.addLayout(runtype)
-        layout1.addWidget(QHLine())
+        layout_left.addWidget(runtype_group)
 
+        group_ga = qW.QGroupBox("Genetic Algorithm")
+        group_ga.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
         operators = qW.QFormLayout()
-        operators.addWidget(qW.QLabel("Genetic Algorithm"))
         operators.addWidget(OGUILEMCrossOverBox())
-        operators.addWidget(qW.QLabel("Mutation operators:"))
-        operators.addWidget(qW.QListView())
+        operators.addWidget(OGUILEMMutationsBox())
+        group_ga.setLayout(operators)
 
-        layout1.addLayout(operators)
-        layout1.addWidget(QHLine())
+        layout_left.addWidget(group_ga)
 
-        locopt = qW.QFormLayout()
-        locopt.addWidget(qW.QLabel("Fitness Function"))
-        locopt.addWidget(qW.QListView())
+        group_fit = qW.QGroupBox("Fitness Function")
+        group_fit.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        fit_layout = qW.QFormLayout()
+        fit_layout.addWidget(OGUILEMFitnessBox())
+        group_fit.setLayout(fit_layout)
 
-        layout1.addLayout(locopt)
+        layout_left.addWidget(group_fit)
 
-        columns.addLayout(layout1)
+        layout_left.addSpacerItem(qW.QSpacerItem(0, 1, vPolicy=qW.QSizePolicy.Expanding))
 
-        layout2 = qW.QFormLayout()
-        layout2.addWidget(qW.QLabel("General Settings"))
-        layout2.addWidget(qW.QCheckBox("Flag 1"))
-        layout2.addWidget(qW.QCheckBox("Flag 2"))
-        layout2.addWidget(qW.QCheckBox("Flag 3"))
-        layout2.addWidget(qW.QCheckBox("Flag 4"))
-        layout2.addWidget(qW.QCheckBox("Flag 5"))
+        columns.addLayout(layout_left)
 
-        columns.addLayout(layout2)
+        layout_right = qW.QVBoxLayout()
+
+        group_cd = qW.QGroupBox("Collision Detection")
+        group_cd.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout_cd = qW.QGridLayout()
+        layout_cd.addWidget(qW.QCheckBox("Pre-Fitness"), 0, 0)
+        layout_cd.addWidget(qW.QCheckBox("Post-Fitness"), 1, 0)
+        layout_cd.addWidget(qW.QLabel("Threshold"), 0, 1)
+        layout_cd.addWidget(qW.QLineEdit(), 0, 2)
+        group_cd.setLayout(layout_cd)
+
+        group_dd = qW.QGroupBox("Dissociation Detection")
+        group_dd.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout_dd = qW.QGridLayout()
+        layout_dd.addWidget(qW.QCheckBox("Pre-Fitness"), 0, 0)
+        layout_dd.addWidget(qW.QCheckBox("Post-Fitness"), 1, 0)
+        layout_dd.addWidget(qW.QLabel("Threshold"), 0, 1)
+        layout_dd.addWidget(qW.QLineEdit(), 0, 2)
+        group_dd.setLayout(layout_dd)
+
+        layout_right.addWidget(group_cd)
+        layout_right.addWidget(group_dd)
+
+        layout_right.addSpacerItem(qW.QSpacerItem(0, 1, vPolicy=qW.QSizePolicy.Expanding))
+
+        columns.addLayout(layout_right)
 
         self.setLayout(columns)
+
+
+class OGUILEMGeometryTab(qW.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+
+    def init_ui(self):
+        layout = qW.QVBoxLayout()
+
+        info_row = qW.QHBoxLayout()
+        btn1 = qW.QPushButton("Add...")
+        btn2 = qW.QPushButton("Remove")
+        btn1.setStyleSheet("min-width: 60px; max-width:80px")
+        btn2.setStyleSheet("min-width: 60px; max-width:80px")
+        info_row.addWidget(btn1)
+        info_row.addWidget(btn2)
+        info_row.addSpacerItem(qW.QSpacerItem(1, 0, qW.QSizePolicy.Expanding))
+        info_row.addWidget(qW.QLabel("Total Entities:"))
+        line_edit = qW.QLineEdit()
+        line_edit.setReadOnly(True)
+        line_edit.setStyleSheet("min-width: 40px; max-width:40px")
+        info_row.addWidget(line_edit)
+        layout.addLayout(info_row)
+
+        table_view = qW.QTableView()
+        layout.addWidget(table_view)
+
+        self.setLayout(layout)
 
 
 class OGUILEMRunTypeBox(qW.QComboBox):
@@ -145,6 +194,41 @@ class OGUILEMCrossOverBox(qW.QWidget):
     def open_edit(self):
         popup = OGUILEMCrossOverDialog(self)
         popup.exec()
+
+
+class OGUILEMMutationsBox(qW.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        layout = qW.QGridLayout()
+        layout.addWidget(qW.QLabel("Mutation operators:"), 0, 0)
+        self.edit = qW.QLineEdit()
+        self.edit.setReadOnly(True)
+        layout.addWidget(self.edit, 1, 0)
+        self.btn = qW.QPushButton("Edit...")
+        self.btn.clicked.connect(self.open_edit)
+        layout.addWidget(self.btn, 1, 1)
+        self.setLayout(layout)
+
+    def open_edit(self):
+        pass
+
+
+class OGUILEMFitnessBox(qW.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        layout = qW.QGridLayout()
+        self.edit = qW.QLineEdit()
+        self.edit.setReadOnly(True)
+        layout.addWidget(self.edit, 1, 0)
+        self.btn = qW.QPushButton("Edit...")
+        self.btn.clicked.connect(self.open_edit)
+        layout.addWidget(self.btn, 1, 1)
+        self.setLayout(layout)
+
+    def open_edit(self):
+        pass
 
 
 class OGUILEMCrossOverDialog(qW.QDialog):
