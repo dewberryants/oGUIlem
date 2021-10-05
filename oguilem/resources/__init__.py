@@ -48,11 +48,12 @@ def _parse_general():
     for node in tree.getroot():
         try:
             id = node.attrib["key"]
+            type = node.attrib["type"]
             default = node.attrib["default"]
         except KeyError:
             raise IOError("Could not parse general.xml because one of the settings tags was missing"
                           + " the 'default' attribute.")
-        ret[id] = default
+        ret[id] = (type, default)
     return ret
 
 

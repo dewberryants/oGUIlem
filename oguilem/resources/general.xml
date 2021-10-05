@@ -1,10 +1,10 @@
 <general>
-    <setting key="CellSize" default="60;60;60"/>
-    <setting key="NumberOfGlobIterations" default="1000"/>
-    <setting key="PoolSize" default="100"/>
-    <setting key="PreSanityDD" default="true"/>
-    <setting key="PostSanityDD" default="true"/>
-    <setting key="PreSanityCD" default="true"/>
-    <setting key="PostSanityCD" default="true"/>
-    <setting key="BlowBondDetect" default="true"/>
+    <setting key="CellSize" type="3;float" default="60;60;60"/>
+    <setting key="NumberOfGlobIterations" type="int" default="1000"/>
+    <setting key="PoolSize" type="int" default="100"/>
+    <setting key="PreSanityDD" type="bool" default="true"/>
+    <setting key="PostSanityDD" type="bool" default="true"/>
+    <setting key="PreSanityCD" type="bool" default="true"/>
+    <setting key="PostSanityCD" type="bool" default="true"/>
+    <setting key="BlowBondDetect" type="float" default="1.4"/>
 </general>

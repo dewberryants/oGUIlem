@@ -24,6 +24,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
 
         file_menu = self.menuBar().addMenu("File")
         q_open = qW.QAction("Open...", self)
+        q_open.triggered.connect(self.open_file_dialog)
         file_menu.addAction(q_open)
         q_save = qW.QAction("Save...", self)
         file_menu.addAction(q_save)
@@ -44,6 +45,11 @@ class OGUILEMMainWindow(qW.QMainWindow):
 
         self.setCentralWidget(OGUILEMCalcWidget())
         self.setWindowTitle("oGUIlem")
+
+    def open_file_dialog(self):
+        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
+        if file_name:
+            conf.load_from_file(file_name)
 
 
 class OGUILEMCalcWidget(qW.QWidget):
@@ -123,7 +129,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
         group_general.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
         layout_gen = qW.QGridLayout()
         layout_gen.addWidget(qW.QLabel("Pool Size"), 0, 0)
-        layout_gen.addWidget(qW.QLineEdit(), 0, 1)
+        layout_gen.addWidget(SmartLineEdit(conf.options.values["PoolSize"]), 0, 1)
         layout_gen.addWidget(qW.QLabel("Global Optimization Iterations"), 1, 0)
         layout_gen.addWidget(qW.QLineEdit(), 1, 1)
         layout_gen.addWidget(qW.QLabel("Cell Size"), 2, 0)
@@ -306,3 +312,18 @@ class OGUILEMConfigEditDialog(qW.QDialog):
         for row in rows:
             self.tree.model().removeRow(row)
             break
+
+
+class SmartLineEdit(qW.QLineEdit):
+    def __init__(self, connected_value):
+        super().__init__()
+        self.connected_value = connected_value
+        self.connected_value.changed.connect(self.update_text)
+        self.update_text()
+
+    def update_text(self):
+        self.setText(str(self.connected_value))
+
+    def update_value(self, edit):
+        self.connected_value.set(edit)
+        self.setText(str(self.connected_value))

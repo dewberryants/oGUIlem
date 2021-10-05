@@ -1,5 +1,6 @@
-import copy
+import re
 
+from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from resources import runtypes, crossovers, mutations, options
 
@@ -13,6 +14,15 @@ class OGUILEMConfig:
 
     def set_runtype(self, id):
         self.runtype.set_runtype(id)
+
+    def load_from_file(self, file):
+        with open(file, "r") as conf_file:
+            content = conf_file.readlines()
+            ps = 0
+            for line in content:
+                if re.search("PoolSize", line):
+                    ps = int(re.search(r"[0-9]+", line)[0])
+            self.options.values["PoolSize"].set(ps)
 
 
 class OGUILEMRunTypeConfig:
@@ -82,8 +92,25 @@ class OGUILEMMutationConfig:
 
 class OGUILEMGeneralConfig:
     def __init__(self):
-        self.defaults = options
-        self.values = copy.deepcopy(self.defaults)
+        self.defaults = dict()
+        self.values = dict()
+        for key in options:
+            type, default = options[key]
+            if type == "str":
+                self.defaults[key] = default
+            elif type == "int":
+                self.defaults[key] = int(default)
+            elif type == "float":
+                self.defaults[key] = float(default)
+            elif type == "bool":
+                self.defaults[key] = bool(default)
+            elif type == "3;float":
+                default = default.strip().split(";")
+                self.defaults[key] = (float(default[0]), float(default[1]), float(default[2]))
+            else:
+                raise IOError("Could not parse xml key %s in general configs!" % key)
+        for key in self.defaults:
+            self.values[key] = ConnectedValue(self.defaults[key])
 
 
 class _NodeItem(QStandardItem):
@@ -128,6 +155,34 @@ class _EmptyItem(QStandardItem):
     def __init__(self):
         super().__init__("")
         self.setEditable(False)
+
+
+class ConnectedValue(QObject):
+    changed = pyqtSignal()
+
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+        self.type = type(value)
+
+    def get(self):
+        return self.value
+
+    def set(self, value, index=-1):
+        if self.type is list and index > 0:
+            self.value[index] = value
+        elif self.type is tuple and index > 0:
+            tmp = list(self.value)
+            tmp[index] = value
+            self.value[index] = tuple(tmp)
+        elif type(value) is self.type:
+            self.value = value
+        else:
+            raise ValueError("Could not set connected value!")
+        self.changed.emit()
+
+    def __str__(self):
+        return str(self.value)
 
 
 instance = OGUILEMConfig()
