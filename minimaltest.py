@@ -33,7 +33,7 @@ def add_entry():
 
 
 def remove_entry(indices):
-    rowsToBeRemoved=set()
+    rowsToBeRemoved = set()
     for index in indices:
         rowsToBeRemoved.add(index.row())
     for row in rowsToBeRemoved:

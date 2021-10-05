@@ -1,11 +1,15 @@
+import copy
+
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from resources import runtypes, crossovers
+from resources import runtypes, crossovers, mutations, options
 
 
 class OGUILEMConfig:
     def __init__(self):
         self.runtype = OGUILEMRunTypeConfig()
         self.crossover = OGUILEMXOverConfig()
+        self.mutation = OGUILEMMutationConfig()
+        self.options = OGUILEMGeneralConfig()
 
     def set_runtype(self, id):
         self.runtype.set_runtype(id)
@@ -48,21 +52,67 @@ class OGUILEMXOverConfig:
     def add_choice_to_model(self, index):
         item = self.choices.item(index, 0)
         if item is not None and item.__class__ is _NodeItem:
-            self.model.appendRow(item.clone())
+            self.model.appendRow([item.clone(), _EmptyItem()])
+
+
+class OGUILEMMutationConfig:
+    def __init__(self):
+        self.choices = QStandardItemModel()
+        parent = self.choices.invisibleRootItem()
+        for key in mutations:
+            parent.appendRow(_NodeItem(mutations[key]))
+        self.model = QStandardItemModel()
+        self.model.setHorizontalHeaderItem(0, QStandardItem(""))
+        self.model.setHorizontalHeaderItem(1, QStandardItem(""))
+
+    def get_model(self):
+        return self.model
+
+    def from_model(self, model):
+        self.model = model
+
+    def get_choices(self):
+        return self.choices
+
+    def add_choice_to_model(self, index):
+        item = self.choices.item(index, 0)
+        if item is not None and item.__class__ is _NodeItem:
+            self.model.appendRow([item.clone(), _EmptyItem()])
+
+
+class OGUILEMGeneralConfig:
+    def __init__(self):
+        self.defaults = options
+        self.values = copy.deepcopy(self.defaults)
 
 
 class _NodeItem(QStandardItem):
-    def __init__(self, node):
+    def __init__(self, node, ignore_opts=False):
         super().__init__()
+        self.choices = None
         if node.id:
             self.id = node.id
         if node.name:
             self.setText(node.name)
         if node.descr:
             self.setToolTip(node.descr)
-        if node.opts:
+        if node.opts and not ignore_opts:
             for opt in node.opts:
-                self.appendRow(_NodeItem(opt))
+                if len(opt.opts) >= 1:
+                    choices = QStandardItemModel()
+                    for opt_opt in opt.opts:
+                        opt_item = _NodeItem(opt_opt, ignore_opts=True)
+                        if opt_opt.user_defined:
+                            opt_item.setEditable(True)
+                        choices.appendRow(opt_item)
+                    item = _NodeItem(opt, ignore_opts=True)
+                    item.choices = choices
+                    self.appendRow([item, choices.item(0, 0).clone()])
+                else:
+                    opt_item = _NodeItem(opt)
+                    if opt.user_defined:
+                        opt_item.setEditable(True)
+                    self.appendRow([opt_item, _EmptyItem()])
         self.setEditable(False)
 
     def clone(self):
@@ -70,8 +120,14 @@ class _NodeItem(QStandardItem):
         rows = self.rowCount()
         if rows > 0:
             for n in range(rows):
-                ret.appendRow(self.child(n).clone())
+                ret.appendRow([self.child(n, 0).clone(), self.child(n, 1).clone()])
         return ret
+
+
+class _EmptyItem(QStandardItem):
+    def __init__(self):
+        super().__init__("")
+        self.setEditable(False)
 
 
 instance = OGUILEMConfig()

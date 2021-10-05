@@ -65,70 +65,110 @@ class OGUILEMCalcWidget(qW.QWidget):
 class OGUILEMCalcInfoTab(qW.QWidget):
     def __init__(self):
         super().__init__()
+        self.runtype_box = None
+        self.crossover_box = None
+        self.mutation_box = None
+        self.fitness_box = None
         self.init_ui()
 
     def init_ui(self):
         columns = qW.QHBoxLayout()
 
         layout_left = qW.QVBoxLayout()
-
-        runtype_group = qW.QGroupBox("Run Type")
-        runtype_group.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
-        runtype_layout = qW.QFormLayout()
-        runtype_layout.addWidget(OGUILEMRunTypeBox())
-        runtype_group.setLayout(runtype_layout)
-
-        layout_left.addWidget(runtype_group)
-
-        group_ga = qW.QGroupBox("Genetic Algorithm")
-        group_ga.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
-        operators = qW.QFormLayout()
-        operators.addWidget(OGUILEMCrossOverBox())
-        operators.addWidget(OGUILEMMutationsBox())
-        group_ga.setLayout(operators)
-
-        layout_left.addWidget(group_ga)
-
-        group_fit = qW.QGroupBox("Fitness Function")
-        group_fit.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
-        fit_layout = qW.QFormLayout()
-        fit_layout.addWidget(OGUILEMFitnessBox())
-        group_fit.setLayout(fit_layout)
-
-        layout_left.addWidget(group_fit)
-
+        layout_left.addWidget(self.construct_runtype_group())
+        layout_left.addWidget(self.construct_ga_group())
+        layout_left.addWidget(self.construct_fitness_group())
         layout_left.addSpacerItem(qW.QSpacerItem(0, 1, vPolicy=qW.QSizePolicy.Expanding))
-
         columns.addLayout(layout_left)
 
         layout_right = qW.QVBoxLayout()
-
-        group_cd = qW.QGroupBox("Collision Detection")
-        group_cd.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
-        layout_cd = qW.QGridLayout()
-        layout_cd.addWidget(qW.QCheckBox("Pre-Fitness"), 0, 0)
-        layout_cd.addWidget(qW.QCheckBox("Post-Fitness"), 1, 0)
-        layout_cd.addWidget(qW.QLabel("Threshold"), 0, 1)
-        layout_cd.addWidget(qW.QLineEdit(), 0, 2)
-        group_cd.setLayout(layout_cd)
-
-        group_dd = qW.QGroupBox("Dissociation Detection")
-        group_dd.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
-        layout_dd = qW.QGridLayout()
-        layout_dd.addWidget(qW.QCheckBox("Pre-Fitness"), 0, 0)
-        layout_dd.addWidget(qW.QCheckBox("Post-Fitness"), 1, 0)
-        layout_dd.addWidget(qW.QLabel("Threshold"), 0, 1)
-        layout_dd.addWidget(qW.QLineEdit(), 0, 2)
-        group_dd.setLayout(layout_dd)
-
-        layout_right.addWidget(group_cd)
-        layout_right.addWidget(group_dd)
-
+        layout_right.addWidget(self.construct_general_group())
+        layout_right.addWidget(self.construct_sanity_group())
         layout_right.addSpacerItem(qW.QSpacerItem(0, 1, vPolicy=qW.QSizePolicy.Expanding))
-
         columns.addLayout(layout_right)
 
         self.setLayout(columns)
+
+    def construct_runtype_group(self):
+        runtype_group = qW.QGroupBox("Run Type")
+        runtype_group.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        runtype_layout = qW.QFormLayout()
+        self.runtype_box = OGUILEMRunTypeBox()
+        runtype_layout.addWidget(self.runtype_box)
+        runtype_group.setLayout(runtype_layout)
+        return runtype_group
+
+    def construct_ga_group(self):
+        group_ga = qW.QGroupBox("Genetic Algorithm")
+        group_ga.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        operators = qW.QFormLayout()
+        self.crossover_box = OGUILEMCrossOverBox()
+        operators.addWidget(self.crossover_box)
+        self.mutation_box = OGUILEMMutationsBox()
+        operators.addWidget(self.mutation_box)
+        group_ga.setLayout(operators)
+        return group_ga
+
+    def construct_fitness_group(self):
+        group_fit = qW.QGroupBox("Fitness Function")
+        group_fit.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        fit_layout = qW.QFormLayout()
+        self.fitness_box = OGUILEMFitnessBox()
+        fit_layout.addWidget(self.fitness_box)
+        group_fit.setLayout(fit_layout)
+        return group_fit
+
+    def construct_general_group(self):
+        group_general = qW.QGroupBox("General Settings")
+        group_general.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout_gen = qW.QGridLayout()
+        layout_gen.addWidget(qW.QLabel("Pool Size"), 0, 0)
+        layout_gen.addWidget(qW.QLineEdit(), 0, 1)
+        layout_gen.addWidget(qW.QLabel("Global Optimization Iterations"), 1, 0)
+        layout_gen.addWidget(qW.QLineEdit(), 1, 1)
+        layout_gen.addWidget(qW.QLabel("Cell Size"), 2, 0)
+        triple_layout = qW.QHBoxLayout()
+        triple_layout.addWidget(qW.QLineEdit())
+        triple_layout.addWidget(qW.QLineEdit())
+        triple_layout.addWidget(qW.QLineEdit())
+        layout_gen.addLayout(triple_layout, 2, 1)
+        group_general.setLayout(layout_gen)
+        return group_general
+
+    def construct_sanity_group(self):
+        group_sanity = qW.QGroupBox("Sanity Checks")
+        group_sanity.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout_sanity = qW.QVBoxLayout()
+
+        layout_upper = qW.QHBoxLayout()
+
+        group_cd = qW.QGroupBox("Collision Detection")
+        layout_cd = qW.QFormLayout()
+        layout_cd.addWidget(qW.QCheckBox("Pre-Fitness"))
+        layout_cd.addWidget(qW.QCheckBox("Post-Fitness"))
+        group_cd.setLayout(layout_cd)
+
+        layout_upper.addWidget(group_cd)
+
+        group_dd = qW.QGroupBox("Dissociation Detection")
+        layout_dd = qW.QFormLayout()
+        layout_dd.addWidget(qW.QCheckBox("Pre-Fitness"))
+        layout_dd.addWidget(qW.QCheckBox("Post-Fitness"))
+        group_dd.setLayout(layout_dd)
+
+        layout_upper.addWidget(group_dd)
+
+        layout_sanity.addLayout(layout_upper)
+
+        layout_lower = qW.QHBoxLayout()
+
+        layout_lower.addWidget(qW.QLabel("Bond Detection Blow Factor"))
+        layout_lower.addWidget(qW.QLineEdit())
+
+        layout_sanity.addLayout(layout_lower)
+
+        group_sanity.setLayout(layout_sanity)
+        return group_sanity
 
 
 class OGUILEMGeometryTab(qW.QWidget):
@@ -192,7 +232,7 @@ class OGUILEMCrossOverBox(qW.QWidget):
         self.setLayout(layout)
 
     def open_edit(self):
-        popup = OGUILEMCrossOverDialog(self)
+        popup = OGUILEMConfigEditDialog(self, conf.crossover, "Edit Crossovers...")
         popup.exec()
 
 
@@ -211,7 +251,8 @@ class OGUILEMMutationsBox(qW.QWidget):
         self.setLayout(layout)
 
     def open_edit(self):
-        pass
+        popup = OGUILEMConfigEditDialog(self, conf.mutation, "Edit Mutations...")
+        popup.exec()
 
 
 class OGUILEMFitnessBox(qW.QWidget):
@@ -231,15 +272,16 @@ class OGUILEMFitnessBox(qW.QWidget):
         pass
 
 
-class OGUILEMCrossOverDialog(qW.QDialog):
-    def __init__(self, parent):
+class OGUILEMConfigEditDialog(qW.QDialog):
+    def __init__(self, parent, config, title):
         super().__init__(parent)
+        self.config = config
         self.tree = qW.QTreeView()
-        self.tree.setModel(conf.crossover.get_model())
+        self.tree.setModel(self.config.get_model())
         layout = qW.QVBoxLayout()
         line1_layout = qW.QHBoxLayout()
         self.combo_box = qW.QComboBox()
-        self.combo_box.setModel(conf.crossover.get_choices())
+        self.combo_box.setModel(self.config.get_choices())
         line1_layout.addWidget(self.combo_box)
         plus_button = qW.QPushButton("+")
         plus_button.setStyleSheet("min-width: 30px; max-width:30px")
@@ -252,10 +294,10 @@ class OGUILEMCrossOverDialog(qW.QDialog):
         layout.addLayout(line1_layout)
         layout.addWidget(self.tree)
         self.setLayout(layout)
-        self.setWindowTitle("Crossovers")
+        self.setWindowTitle(title)
 
     def add_entry(self):
-        conf.crossover.add_choice_to_model(self.combo_box.currentIndex())
+        self.config.add_choice_to_model(self.combo_box.currentIndex())
 
     def remove_entry(self, indices):
         rows = set()
