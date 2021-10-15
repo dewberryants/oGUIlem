@@ -1,3 +1,4 @@
+import copy
 import re
 
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -16,13 +17,37 @@ class OGUILEMConfig:
         self.runtype.set_runtype(id)
 
     def load_from_file(self, file):
+        self.options.set_to_default()
         with open(file, "r") as conf_file:
             content = conf_file.readlines()
-            ps = 0
             for line in content:
-                if re.search("PoolSize", line):
-                    ps = int(re.search(r"[0-9]+", line)[0])
-            self.options.values["PoolSize"].set(ps)
+                for key in self.options.values:
+                    type = self.options.values[key].type
+                    if re.match(key + "=", line.strip()):
+                        value, index = parse_value(line.strip()[len(key) + 1:], type)
+                        if value is not None:
+                            print(value)
+                            self.options.values[key].set(value, index)
+                        else:
+                            self.options.values[key].set(self.options.defaults[key])
+
+
+def parse_value(line, type):
+    value = None
+    index = -1
+    work = line.strip()
+    if type is str:
+        value = work
+    elif type is int:
+        value = int(work)
+    elif type is float:
+        value = float(work)
+    elif type is bool:
+        value = work.lower == "true"
+    elif type is tuple:
+        tmp = work.split(";")
+        value = (float(tmp[0]), float(tmp[1]), float(tmp[2]))
+    return value, index
 
 
 class OGUILEMRunTypeConfig:
@@ -109,8 +134,11 @@ class OGUILEMGeneralConfig:
                 self.defaults[key] = (float(default[0]), float(default[1]), float(default[2]))
             else:
                 raise IOError("Could not parse xml key %s in general configs!" % key)
-        for key in self.defaults:
             self.values[key] = ConnectedValue(self.defaults[key])
+
+    def set_to_default(self):
+        for key in options:
+            self.values[key].set(self.defaults[key])
 
 
 class _NodeItem(QStandardItem):

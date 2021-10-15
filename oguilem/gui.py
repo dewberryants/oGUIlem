@@ -1,5 +1,6 @@
 import PyQt5.QtWidgets as qW
 
+from PyQt5.QtCore import Qt
 from config import instance as conf
 
 
@@ -131,7 +132,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
         layout_gen.addWidget(qW.QLabel("Pool Size"), 0, 0)
         layout_gen.addWidget(SmartLineEdit(conf.options.values["PoolSize"]), 0, 1)
         layout_gen.addWidget(qW.QLabel("Global Optimization Iterations"), 1, 0)
-        layout_gen.addWidget(qW.QLineEdit(), 1, 1)
+        layout_gen.addWidget(SmartLineEdit(conf.options.values["NumberOfGlobIterations"]), 1, 1)
         layout_gen.addWidget(qW.QLabel("Cell Size"), 2, 0)
         triple_layout = qW.QHBoxLayout()
         triple_layout.addWidget(qW.QLineEdit())
@@ -150,16 +151,16 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         group_cd = qW.QGroupBox("Collision Detection")
         layout_cd = qW.QFormLayout()
-        layout_cd.addWidget(qW.QCheckBox("Pre-Fitness"))
-        layout_cd.addWidget(qW.QCheckBox("Post-Fitness"))
+        layout_cd.addWidget(SmartCheckBox("Pre-Fitness", conf.options.values["PreSanityCD"]))
+        layout_cd.addWidget(SmartCheckBox("Post-Fitness", conf.options.values["PostSanityCD"]))
         group_cd.setLayout(layout_cd)
 
         layout_upper.addWidget(group_cd)
 
         group_dd = qW.QGroupBox("Dissociation Detection")
         layout_dd = qW.QFormLayout()
-        layout_dd.addWidget(qW.QCheckBox("Pre-Fitness"))
-        layout_dd.addWidget(qW.QCheckBox("Post-Fitness"))
+        layout_dd.addWidget(SmartCheckBox("Pre-Fitness", conf.options.values["PreSanityDD"]))
+        layout_dd.addWidget(SmartCheckBox("Post-Fitness", conf.options.values["PostSanityDD"]))
         group_dd.setLayout(layout_dd)
 
         layout_upper.addWidget(group_dd)
@@ -318,12 +319,33 @@ class SmartLineEdit(qW.QLineEdit):
     def __init__(self, connected_value):
         super().__init__()
         self.connected_value = connected_value
-        self.connected_value.changed.connect(self.update_text)
-        self.update_text()
+        self.connected_value.changed.connect(self.update_from_config)
+        self.update_from_config()
 
-    def update_text(self):
+    def update_from_config(self):
         self.setText(str(self.connected_value))
 
-    def update_value(self, edit):
-        self.connected_value.set(edit)
+    def update_to_config(self):
+        self.connected_value.set(int(self.text()))
         self.setText(str(self.connected_value))
+
+
+class SmartCheckBox(qW.QCheckBox):
+    def __init__(self, label, connected_value):
+        super().__init__(label)
+        self.connected_value = connected_value
+        self.connected_value.changed.connect(self.update_from_config)
+        self.update_from_config()
+
+    def update_from_config(self):
+        if self.connected_value.value:
+            self.setCheckState(Qt.Checked)
+        else:
+            self.setCheckState(Qt.Unchecked)
+
+    def update_to_config(self, edit):
+        if edit == Qt.Checked:
+            self.connected_value.value = True
+        else:
+            self.connected_value.value = False
+
