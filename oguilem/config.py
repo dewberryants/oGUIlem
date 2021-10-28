@@ -1,4 +1,3 @@
-import copy
 import re
 
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -26,9 +25,10 @@ class OGUILEMConfig:
                     if re.match(key + "=", line.strip()):
                         value, index = parse_value(line.strip()[len(key) + 1:], type)
                         if value is not None:
-                            print(value)
+                            print("Option {:>30} set to: {:>30}".format(key, str(value)))
                             self.options.values[key].set(value, index)
                         else:
+                            print("ERROR: Could not set Option %s. Set to default instead!" % key)
                             self.options.values[key].set(self.options.defaults[key])
 
 
@@ -43,10 +43,10 @@ def parse_value(line, type):
     elif type is float:
         value = float(work)
     elif type is bool:
-        value = work.lower == "true"
-    elif type is tuple:
+        value = work.lower() == "true"
+    elif type is list:
         tmp = work.split(";")
-        value = (float(tmp[0]), float(tmp[1]), float(tmp[2]))
+        value = [float(tmp[0]), float(tmp[1]), float(tmp[2])]
     return value, index
 
 
@@ -128,10 +128,10 @@ class OGUILEMGeneralConfig:
             elif type == "float":
                 self.defaults[key] = float(default)
             elif type == "bool":
-                self.defaults[key] = bool(default)
+                self.defaults[key] = (default.lower() == "true")
             elif type == "3;float":
                 default = default.strip().split(";")
-                self.defaults[key] = (float(default[0]), float(default[1]), float(default[2]))
+                self.defaults[key] = [float(default[0]), float(default[1]), float(default[2])]
             else:
                 raise IOError("Could not parse xml key %s in general configs!" % key)
             self.values[key] = ConnectedValue(self.defaults[key])
@@ -193,16 +193,14 @@ class ConnectedValue(QObject):
         self.value = value
         self.type = type(value)
 
-    def get(self):
+    def get(self, index=-1):
+        if self.type is list and index >= 0:
+            return self.value[index]
         return self.value
 
     def set(self, value, index=-1):
-        if self.type is list and index > 0:
+        if self.type is list and index >= 0:
             self.value[index] = value
-        elif self.type is tuple and index > 0:
-            tmp = list(self.value)
-            tmp[index] = value
-            self.value[index] = tuple(tmp)
         elif type(value) is self.type:
             self.value = value
         else:

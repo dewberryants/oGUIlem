@@ -1,10 +1,33 @@
 <general>
-    <setting key="CellSize" type="3;float" default="60;60;60"/>
+    <setting key="CellSize" type="3;float" default="9;9;9"/>
     <setting key="NumberOfGlobIterations" type="int" default="1000"/>
     <setting key="PoolSize" type="int" default="100"/>
     <setting key="PreSanityDD" type="bool" default="true"/>
     <setting key="PostSanityDD" type="bool" default="true"/>
     <setting key="PreSanityCD" type="bool" default="true"/>
     <setting key="PostSanityCD" type="bool" default="true"/>
-    <setting key="BlowBondDetect" type="float" default="1.4"/>
+    <setting key="BlowBondDetect" type="float" default="1.2"/>
+    <setting key="MaxBondStretch" type="float" default="1.3"/>
+    <setting key="BlowInitialBonds" type="float" default="1.2"/>
+    <setting key="BlowFacDissoc" type="float" default="3.0"/>
+    <setting key="GrowCell" type="bool" default="false"/>
+    <setting key="ClusterDetailedStats" type="bool" default="false"/>
+    <setting key="GeneticRecordBufferSize" type="int" default="1000"/>
+    <setting key="DebugLevel" type="int" default="0"/>
+    <setting key="PrintGeomsBeforeLocOpt" type="bool" default="false"/>
+    <setting key="DoGeometryNiching" type="bool" default="false"/>
+    <setting key="NichingAddToStats" type="int" default="50"/>
+    <setting key="noOfIndividualsPerNicheAtMax" type="int" default="50"/>
+    <setting key="AcceptableFitness" type="float" default="-1.78e308"/>
+    <setting key="GeneticRecordsToSerial" type="int" default="1000"/>
+    <setting key="GeometriesToSerial" type="int" default="99"/>
+    <setting key="SerializeAfterNewBest" type="bool" default="true"/>
+    <setting key="WriteEveryGeometry" type="bool" default="false"/>
+    <setting key="crossPossibility" type="float" default="1.0"/>
+    <setting key="molCrossPoss" type="bool" default="1.0"/>
+    <setting key="mutatePossibility" type="float" default="0.05"/>
+    <setting key="molMutatePoss" type="float" default="0.05"/>
+    <setting key="SeedingPath" type="str" default="N/A"/>
+    <setting key="SilentMode" type="bool" default="false"/>
+    <setting key="SerializePoolAfterBest" type="bool" default="true"/>
 </general>
