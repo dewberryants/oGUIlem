@@ -16,6 +16,9 @@ class OGOLEMGeometryConfig:
             raise TypeError("Cannot add %s to OGOLEMGeometry!" % str(type(other)))
         return self
 
+    def __iter__(self):
+        return iter(self.molecules)
+
     def pop(self, index):
         return self.molecules.pop(index)
 

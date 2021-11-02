@@ -1,6 +1,6 @@
 import PyQt5.QtWidgets as qW
-
-from PyQt5.QtCore import Qt
+import PyQt5.QtGui as qG
+from PyQt5.QtCore import Qt, QItemSelection
 from config import instance as conf
 
 
@@ -247,8 +247,7 @@ class OGUILEMGeometryTab(qW.QWidget):
         line_edit.setStyleSheet("min-width: 40px; max-width:40px")
         info_row.addWidget(line_edit)
         layout_g1.addLayout(info_row)
-        table_view = qW.QTableView()
-        layout_g1.addWidget(table_view)
+        layout_g1.addWidget(GeometryMoleculeList())
         group1.setLayout(layout_g1)
         layout.addWidget(group1)
 
@@ -442,6 +441,15 @@ class SmartCheckBox(qW.QCheckBox):
 
 
 class GeometryMoleculeList(qW.QListView):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.model =
+        self.setModel(qG.QStandardItemModel())
+        self.selectionModel().selectionChanged.connect(self.handle_selection)
+        self.update_list_from_config()
+
+    def update_list_from_config(self):
+        for n in range(len(conf.geometry)):
+            self.model().appendRow(str(n))
+
+    def handle_selection(self, selection: QItemSelection):
+        print(selection)
