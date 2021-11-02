@@ -229,8 +229,10 @@ class OGUILEMGeometryTab(qW.QWidget):
         self.init_ui()
 
     def init_ui(self):
-        layout = qW.QVBoxLayout()
+        layout = qW.QHBoxLayout()
 
+        group1 = qW.QGroupBox("Molecules")
+        layout_g1 = qW.QVBoxLayout()
         info_row = qW.QHBoxLayout()
         btn1 = qW.QPushButton("Add...")
         btn2 = qW.QPushButton("Remove")
@@ -244,10 +246,30 @@ class OGUILEMGeometryTab(qW.QWidget):
         line_edit.setReadOnly(True)
         line_edit.setStyleSheet("min-width: 40px; max-width:40px")
         info_row.addWidget(line_edit)
-        layout.addLayout(info_row)
-
+        layout_g1.addLayout(info_row)
         table_view = qW.QTableView()
-        layout.addWidget(table_view)
+        layout_g1.addWidget(table_view)
+        group1.setLayout(layout_g1)
+        layout.addWidget(group1)
+
+        group2 = qW.QGroupBox("Selected Molecule")
+        layout_g2_header = qW.QGridLayout()
+        layout_g2 = qW.QVBoxLayout()
+        accept_btn = qW.QPushButton("Apply")
+        accept_btn.setStyleSheet("min-width: 60px; max-width:80px")
+        layout_g2_header.addWidget(qW.QLabel("Molecule Info"), 0, 0)
+        layout_g2_header.addWidget(accept_btn, 0, 1)
+        layout_g2.addLayout(layout_g2_header)
+        content_table = qW.QTableWidget()
+        layout_g2.addWidget(content_table)
+        layout_g2.addWidget(qW.QLabel("Molecule Charges"))
+        charge_table = qW.QTableWidget()
+        layout_g2.addWidget(charge_table)
+        layout_g2.addWidget(qW.QLabel("Molecule Spins"))
+        spin_table = qW.QTableWidget()
+        layout_g2.addWidget(spin_table)
+        group2.setLayout(layout_g2)
+        layout.addWidget(group2)
 
         self.setLayout(layout)
 
@@ -418,3 +440,8 @@ class SmartCheckBox(qW.QCheckBox):
         else:
             self.connected_value.value = False
 
+
+class GeometryMoleculeList(qW.QListView):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.model =

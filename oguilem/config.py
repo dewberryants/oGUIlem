@@ -3,6 +3,7 @@ import re
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from resources import runtypes, crossovers, mutations, options
+from configuration.geometry import OGOLEMGeometryConfig
 
 
 class OGUILEMConfig:
@@ -11,6 +12,7 @@ class OGUILEMConfig:
         self.crossover = OGUILEMXOverConfig()
         self.mutation = OGUILEMMutationConfig()
         self.options = OGUILEMGeneralConfig()
+        self.geometry = OGOLEMGeometryConfig()
 
     def set_runtype(self, id):
         self.runtype.set_runtype(id)
