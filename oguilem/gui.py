@@ -1,7 +1,8 @@
 import PyQt5.QtWidgets as qW
 import PyQt5.QtGui as qG
-from PyQt5.QtCore import Qt, QItemSelection
+from PyQt5.QtCore import Qt, QItemSelection, pyqtSignal
 from config import instance as conf
+from configuration.geometry import OGOLEMMolecule
 
 
 def run_app(argv: list):
@@ -230,12 +231,15 @@ class OGUILEMGeometryTab(qW.QWidget):
 
     def init_ui(self):
         layout = qW.QHBoxLayout()
+        mol_list = GeometryMoleculeList()
 
         group1 = qW.QGroupBox("Molecules")
         layout_g1 = qW.QVBoxLayout()
         info_row = qW.QHBoxLayout()
         btn1 = qW.QPushButton("Add...")
+        btn1.clicked.connect(self.open_mol_add)
         btn2 = qW.QPushButton("Remove")
+        btn2.clicked.connect(mol_list.remove_mol)
         btn1.setStyleSheet("min-width: 60px; max-width:80px")
         btn2.setStyleSheet("min-width: 60px; max-width:80px")
         info_row.addWidget(btn1)
@@ -247,7 +251,7 @@ class OGUILEMGeometryTab(qW.QWidget):
         line_edit.setStyleSheet("min-width: 40px; max-width:40px")
         info_row.addWidget(line_edit)
         layout_g1.addLayout(info_row)
-        layout_g1.addWidget(GeometryMoleculeList())
+        layout_g1.addWidget(mol_list)
         group1.setLayout(layout_g1)
         layout.addWidget(group1)
 
@@ -259,8 +263,7 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout_g2_header.addWidget(qW.QLabel("Molecule Info"), 0, 0)
         layout_g2_header.addWidget(accept_btn, 0, 1)
         layout_g2.addLayout(layout_g2_header)
-        content_table = qW.QTableWidget()
-        layout_g2.addWidget(content_table)
+        layout_g2.addWidget(MoleculeInspectorEdit(mol_list))
         layout_g2.addWidget(qW.QLabel("Molecule Charges"))
         charge_table = qW.QTableWidget()
         layout_g2.addWidget(charge_table)
@@ -271,6 +274,9 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout.addWidget(group2)
 
         self.setLayout(layout)
+
+    def open_mol_add(self):
+        pass
 
 
 class OGUILEMRunTypeBox(qW.QComboBox):
@@ -441,15 +447,44 @@ class SmartCheckBox(qW.QCheckBox):
 
 
 class GeometryMoleculeList(qW.QListView):
+    none_molecule = OGOLEMMolecule([""])
+    selection_changed = pyqtSignal(OGOLEMMolecule)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setModel(qG.QStandardItemModel())
         self.selectionModel().selectionChanged.connect(self.handle_selection)
-        self.update_list_from_config()
+        conf.geometry.changed.connect(self.update_list_from_config)
 
     def update_list_from_config(self):
+        self.model().removeRows(0, self.model().rowCount())
         for n in range(len(conf.geometry)):
-            self.model().appendRow(str(n))
+            self.model().appendRow(qG.QStandardItem("Molecule " + str(n)))
 
     def handle_selection(self, selection: QItemSelection):
-        print(selection)
+        try:
+            selected_row = selection.indexes()[0].row()
+            self.selection_changed.emit(conf.geometry.molecules[selected_row])
+        except IndexError:
+            # Happens when something was deleted
+            self.selection_changed.emit(self.none_molecule)
+            pass
+
+    def remove_mol(self):
+        if self.model().rowCount() > 0:
+            try:
+                selected = self.selectionModel().selection().indexes()[0].row()
+                conf.geometry.pop(selected)
+            except IndexError:
+                print("No valid selection!")
+
+
+class MoleculeInspectorEdit(qW.QTextEdit):
+    def __init__(self, parent: GeometryMoleculeList):
+        super().__init__(parent=parent)
+        self.parent().selection_changed.connect(self.update_content)
+
+    def update_content(self, incoming):
+        if incoming is GeometryMoleculeList.none_molecule:
+            self.setText("")
+        self.setText(str(incoming))

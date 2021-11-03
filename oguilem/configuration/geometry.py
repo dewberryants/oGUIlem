@@ -1,8 +1,12 @@
 from typing import List
+from PyQt5.QtCore import pyqtSignal, QObject
 
 
-class OGOLEMGeometryConfig:
+class OGOLEMGeometryConfig(QObject):
+    changed = pyqtSignal()
+
     def __init__(self):
+        super().__init__()
         self.particles: int = 0
         self.molecules: List[OGOLEMMolecule] = list()
 
@@ -14,15 +18,19 @@ class OGOLEMGeometryConfig:
             self.molecules.append(other)
         else:
             raise TypeError("Cannot add %s to OGOLEMGeometry!" % str(type(other)))
+        self.changed.emit()
         return self
 
     def __iter__(self):
         return iter(self.molecules)
 
     def pop(self, index):
-        return self.molecules.pop(index)
+        popped = self.molecules.pop(index)
+        self.changed.emit()
+        return popped
 
     def parse_from_block(self, block: List[str]):
+        self.molecules = list()
         iter_block = iter(block)
         for line in iter_block:
             tmp = line.strip()
@@ -41,6 +49,7 @@ class OGOLEMGeometryConfig:
                     except StopIteration:
                         raise RuntimeError("Dangling <MOLECULE> tag in configuration!")
                 self.molecules += [OGOLEMMolecule([line.strip() for line in mol_block])]
+        self.changed.emit()
 
 
 class OGOLEMMolecule:

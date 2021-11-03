@@ -21,6 +21,28 @@ class OGUILEMConfig:
         self.options.set_to_default()
         with open(file, "r") as conf_file:
             content = conf_file.readlines()
+            # Find geometry block and split off
+            iter_content = iter(content)
+            geo_block = list()
+            # Separate off geometry block
+            start, end = -1, -1
+            for n, line in enumerate(iter_content):
+                if line.strip().startswith("<GEOMETRY>"):
+                    start = n
+                    try:
+                        geo_line = next(iter_content)
+                    except StopIteration:
+                        raise RuntimeError("Config ends after <GEOMETRY> tag!?")
+                    while not geo_line.startswith("</GEOMETRY>"):
+                        geo_block.append(geo_line)
+                        try:
+                            geo_line = next(iter_content)
+                        except StopIteration:
+                            raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
+                    end = start + len(geo_block) + 2
+            # Parse it
+            self.geometry.parse_from_block(geo_block)
+            content = content[:start] + content[end:]
             for line in content:
                 for key in self.options.values:
                     type = self.options.values[key].type
