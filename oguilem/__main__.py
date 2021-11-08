@@ -1,6 +1,6 @@
 import sys
 
-from gui import run_app
+from ui.general import OGUILEMApplication
 
-if __name__ == "__main__":
-    sys.exit(run_app(sys.argv))
+app = OGUILEMApplication(sys.argv)
+sys.exit(app.run())

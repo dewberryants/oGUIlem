@@ -1,5 +1,6 @@
 import unittest
-from ..configuration.geometry import OGOLEMGeometryConfig, OGOLEMMolecule
+
+from oguilem.configuration.geometry import OGOLEMGeometryConfig, OGOLEMMolecule
 
 
 class GeometryUnitTests(unittest.TestCase):

@@ -2,8 +2,9 @@ import re
 
 from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from resources import runtypes, crossovers, mutations, options
-from configuration.geometry import OGOLEMGeometryConfig
+
+from oguilem.resources import runtypes, crossovers, mutations, options
+from .geometry import OGOLEMGeometryConfig
 
 
 class OGUILEMConfig:
@@ -233,6 +234,3 @@ class ConnectedValue(QObject):
 
     def __str__(self):
         return str(self.value)
-
-
-instance = OGUILEMConfig()
