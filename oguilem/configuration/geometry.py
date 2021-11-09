@@ -1,4 +1,5 @@
 from typing import List
+
 from PyQt5.QtCore import pyqtSignal, QObject
 
 
@@ -48,7 +49,8 @@ class OGOLEMGeometryConfig(QObject):
                         mol_line = next(iter_block)
                     except StopIteration:
                         raise RuntimeError("Dangling <MOLECULE> tag in configuration!")
-                self.molecules += [OGOLEMMolecule([line.strip() for line in mol_block])]
+                # Pre-parse the semicolons to spaces
+                self.molecules += [OGOLEMMolecule(["    ".join(line.strip().split(";")) for line in mol_block])]
         self.changed.emit()
 
 
