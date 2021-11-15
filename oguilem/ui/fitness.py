@@ -91,14 +91,16 @@ class FitnessListHelper:
         self.table = list()
         # Config is a dict of _Node items
         for key in config:
-            required = key
+            label = key if config[key].label is None else config[key.label]
+            required = label
             optional = ""
             for item in config[key].opts:
+                item_label = item.id if item.label is None else item.label
                 if item.required:
                     descr = item.descr.replace("<", "&lt;").replace(">", "&gt;")
-                    required += item.id + "<font color=\"red\">" + descr + "</font>" + ","
+                    required += item_label + "<font color=\"red\">" + descr + "</font>" + ","
                 else:
-                    optional += item.id + item.descr + ","
+                    optional += item_label + item.descr + ","
             if len(required) > 0 and required[-1] == ",":
                 required = required[:-1]
             if len(optional) > 0 and optional[-1] == ",":

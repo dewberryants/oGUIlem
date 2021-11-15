@@ -14,7 +14,7 @@
     <generic name="Cartesian" id="xyz:">
         Generic Backend for Cartesian Problems (e.g. Molecules and Atoms). Requires a calculator backend to be able to
         provide energies and gradients back to local optimizers.
-        <option id="backend=" required="True">&lt;CALCULATOR BACKEND&gt;</option>
+        <option id="backend" required="True" label="">&lt;CALCULATOR BACKEND&gt;</option>
     </generic>
     <calculator name="Universal Force Field (UFF)" id="universal:">
         Very basic universal Force Field that automatically determines atom types.
