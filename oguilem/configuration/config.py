@@ -31,13 +31,13 @@ class OGUILEMConfig:
                 if line.strip().startswith("<GEOMETRY>"):
                     start = n
                     try:
-                        geo_line = next(iter_content)
+                        geo_line = next(iter_content).strip()
                     except StopIteration:
                         raise RuntimeError("Config ends after <GEOMETRY> tag!?")
                     while not geo_line.startswith("</GEOMETRY>"):
                         geo_block.append(geo_line)
                         try:
-                            geo_line = next(iter_content)
+                            geo_line = next(iter_content).strip()
                         except StopIteration:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(geo_block) + 2

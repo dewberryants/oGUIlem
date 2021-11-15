@@ -12,7 +12,13 @@ class OGUILEMGeometryTab(qW.QWidget):
     def __init__(self):
         super().__init__()
         layout = qW.QHBoxLayout()
-        self.mol_list = GeometryMoleculeList()
+        self.accept_btn = qW.QPushButton("Apply")
+        self.accept_btn.setEnabled(False)
+        self.accept_btn.clicked.connect(self.update_current_molecule)
+        self.accept_btn.setStyleSheet("min-width: 60px; max-width:80px")
+        self.mol_list = GeometryMoleculeList(self)
+        self.mol_content_display = MoleculeInspectorEdit(self.mol_list)
+        self.mol_content_display.textChanged.connect(lambda: self.accept_btn.setEnabled(True))
 
         group1 = qW.QGroupBox("Molecules")
         layout_g1 = qW.QVBoxLayout()
@@ -35,19 +41,12 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout_g1.addWidget(self.mol_list)
         group1.setLayout(layout_g1)
         layout.addWidget(group1)
-
         group2 = qW.QGroupBox("Selected Molecule")
         layout_g2_header = qW.QGridLayout()
         layout_g2 = qW.QVBoxLayout()
-        self.accept_btn = qW.QPushButton("Apply")
-        self.accept_btn.setEnabled(False)
-        self.accept_btn.clicked.connect(self.update_current_molecule)
-        self.accept_btn.setStyleSheet("min-width: 60px; max-width:80px")
         layout_g2_header.addWidget(qW.QLabel("Molecule Info"), 0, 0)
         layout_g2_header.addWidget(self.accept_btn, 0, 1)
         layout_g2.addLayout(layout_g2_header)
-        self.mol_content_display = MoleculeInspectorEdit(self.mol_list)
-        self.mol_content_display.textChanged.connect(lambda: self.accept_btn.setEnabled(True))
         layout_g2.addWidget(self.mol_content_display)
         layout_g2.addWidget(qW.QLabel("Molecule Charges"))
         charge_table = qW.QTableWidget()
@@ -78,6 +77,7 @@ class GeometryMoleculeList(qW.QListView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.accept_btn = parent.accept_btn
         self.setModel(qG.QStandardItemModel())
         self.selectionModel().selectionChanged.connect(self.handle_selection)
         conf.geometry.changed.connect(self.update_list_from_config)
@@ -92,9 +92,9 @@ class GeometryMoleculeList(qW.QListView):
             selected_row = selection.indexes()[0].row()
             self.selection_changed.emit(conf.geometry.molecules[selected_row])
         except IndexError:
-            # Happens when something was deleted
+            # Happens when something was deleted or added
             self.selection_changed.emit(self.none_molecule)
-            pass
+        self.accept_btn.setEnabled(False)
 
     def mod_mol(self, content):
         if self.model().rowCount() > 0:

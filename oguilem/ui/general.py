@@ -2,9 +2,10 @@ import PyQt5.QtCore as qC
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
-from .ga import OGUILEMGeneticAlgoTab
-from .geometry import OGUILEMGeometryTab
-from .widgets import SmartCheckBox, SmartLineEdit, SmartTripleLineEdit
+from oguilem.ui.fitness import OGUILEMFitnessTab
+from oguilem.ui.ga import OGUILEMGeneticAlgoTab
+from oguilem.ui.geometry import OGUILEMGeometryTab
+from oguilem.ui.widgets import SmartCheckBox, SmartLineEdit, SmartTripleLineEdit
 
 
 class OGUILEMApplication(qW.QApplication):
@@ -67,9 +68,8 @@ class OGUILEMCentralWidget(qW.QWidget):
         tabs.addTab(OGUILEMCalcInfoTab(), "Main")
         tabs.addTab(OGUILEMGeneticAlgoTab(), "Genetic Algorithm")
         tabs.addTab(OGUILEMGeometryTab(), "Geometry")
-        tabs.addTab(OGUILEMCalcInfoTab(), "Environment")
+        tabs.addTab(OGUILEMFitnessTab(), "Fitness Function")
         tabs.addTab(OGUILEMCalcInfoTab(), "Advanced")
-        tabs.setTabEnabled(3, False)
         tabs.setTabEnabled(4, False)
 
         layout.addWidget(tabs)
