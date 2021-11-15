@@ -3,7 +3,7 @@ from typing import List
 from PyQt5.QtCore import pyqtSignal, QObject
 
 
-class OGOLEMGeometryConfig(QObject):
+class OGUILEMGeometryConfig(QObject):
     changed = pyqtSignal()
 
     def __init__(self):

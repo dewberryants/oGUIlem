@@ -1,10 +1,11 @@
 import re
 
-from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
+from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
+from oguilem.configuration.geometry import OGUILEMGeometryConfig
+from oguilem.configuration.utils import ConnectedValue
 from oguilem.resources import runtypes, crossovers, mutations, options
-from .geometry import OGOLEMGeometryConfig
 
 
 class OGUILEMConfig:
@@ -13,7 +14,8 @@ class OGUILEMConfig:
         self.crossover = OGUILEMXOverConfig()
         self.mutation = OGUILEMMutationConfig()
         self.options = OGUILEMGeneralConfig()
-        self.geometry = OGOLEMGeometryConfig()
+        self.geometry = OGUILEMGeometryConfig()
+        self.fitness = OGUILEMFitnessFunctionConfiguration()
 
     def set_runtype(self, id):
         self.runtype.set_runtype(id)
@@ -25,9 +27,12 @@ class OGUILEMConfig:
             # Find geometry block and split off
             iter_content = iter(content)
             geo_block = list()
-            # Separate off geometry block
+            backend_defs = list()
+
+            # Separate off blocks
             start, end = -1, -1
             for n, line in enumerate(iter_content):
+                # Geometry Block
                 if line.strip().startswith("<GEOMETRY>"):
                     start = n
                     try:
@@ -41,20 +46,44 @@ class OGUILEMConfig:
                         except StopIteration:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(geo_block) + 2
-            # Parse it
+                    content = content[:start] + content[end:]
+                # Any Backend Definitions
+                if line.strip().startswith("<CLUSTERBACKEND>"):
+                    back_block = list()
+                    start = n
+                    try:
+                        back_line = next(iter_content).strip()
+                    except StopIteration:
+                        raise RuntimeError("Config ends after <CLUSTERBACKEND> tag!?")
+                    while not back_line.startswith("</CLUSTERBACKEND>"):
+                        back_block.append(back_line)
+                        try:
+                            back_line = next(iter_content).strip()
+                        except StopIteration:
+                            raise RuntimeError("Dangling <CLUSTERBACKEND> tag in configuration!")
+                    end = start + len(back_block) + 2
+                    backend_defs.append(back_block)
+                    content = content[:start] + content[end:]
+
+            # Parse them
             self.geometry.parse_from_block(geo_block)
-            content = content[:start] + content[end:]
+            self.fitness.parse_backend_tags(backend_defs)
+
+            # Deal with the rest
             for line in content:
-                for key in self.options.values:
-                    type = self.options.values[key].type
-                    if re.match(key + "=", line.strip()):
-                        value, index = parse_value(line.strip()[len(key) + 1:], type)
-                        if value is not None:
-                            print("Option {:>30} set to: {:>30}".format(key, str(value)))
-                            self.options.values[key].set(value, index)
-                        else:
-                            print("ERROR: Could not set Option %s. Set to default instead!" % key)
-                            self.options.values[key].set(self.options.defaults[key])
+                if line.strip().strip("LocOptAlgo="):
+                    self.fitness.parse_locopt_algo(line.strip()[11:])
+                else:
+                    for key in self.options.values:
+                        type = self.options.values[key].type
+                        if re.match(key + "=", line.strip()):
+                            value, index = parse_value(line.strip()[len(key) + 1:], type)
+                            if value is not None:
+                                print("Option {:>30} set to: {:>30}".format(key, str(value)))
+                                self.options.values[key].set(value, index)
+                            else:
+                                print("ERROR: Could not set Option %s. Set to default instead!" % key)
+                                self.options.values[key].set(self.options.defaults[key])
 
 
 def parse_value(line, type):
@@ -208,29 +237,3 @@ class _EmptyItem(QStandardItem):
     def __init__(self):
         super().__init__("")
         self.setEditable(False)
-
-
-class ConnectedValue(QObject):
-    changed = pyqtSignal()
-
-    def __init__(self, value):
-        super().__init__()
-        self.value = value
-        self.type = type(value)
-
-    def get(self, index=-1):
-        if self.type is list and index >= 0:
-            return self.value[index]
-        return self.value
-
-    def set(self, value, index=-1):
-        if self.type is list and index >= 0:
-            self.value[index] = value
-        elif type(value) is self.type:
-            self.value = value
-        else:
-            raise ValueError("Could not set connected value!")
-        self.changed.emit()
-
-    def __str__(self):
-        return str(self.value)

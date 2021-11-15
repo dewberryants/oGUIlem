@@ -1,11 +1,11 @@
 import unittest
 
-from oguilem.configuration.geometry import OGOLEMGeometryConfig, OGOLEMMolecule
+from oguilem.configuration.geometry import OGUILEMGeometryConfig, OGOLEMMolecule
 
 
 class GeometryUnitTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.conf = OGOLEMGeometryConfig()
+        self.conf = OGUILEMGeometryConfig()
         self.mol = OGOLEMMolecule(["N/A"])
 
     def tearDown(self) -> None:

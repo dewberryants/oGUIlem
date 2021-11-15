@@ -1,43 +1,30 @@
-class OGOLEMFitnessFunctionConfiguration:
+import re
+from typing import List, Dict
+
+from oguilem.configuration.utils import ConnectedValue
+
+
+class OGUILEMFitnessFunctionConfiguration:
     def __init__(self):
-        pass
+        self.tags: Dict[str] = dict()
+        self.current: ConnectedValue = ConnectedValue("")
 
+    def parse_backend_tags(self, list_blocks: List[List[str]]):
+        for block in list_blocks:
+            block_tag = ""
+            block_back = ""
+            for line in block:
+                tmp = line.strip()
+                if tmp.startswith("BackendTag="):
+                    block_tag = tmp[11:]
+                elif tmp.startswith("Backend="):
+                    block_back = tmp[8:]
+            if block_tag != "" and block_back != "":
+                self.tags[block_tag] = block_back
+            else:
+                raise IOError("There seems to be a problem with one of the backend definition tags!")
 
-class DummyConfig:
-    def __init__(self, name="N/A", desc="N/A", symb="N/A"):
-        self.name = name
-        self.desc = desc
-        self.symb = symb
-        self.properties = dict()
-
-    def __str__(self):
-        add = ""
-        for key in self.properties:
-            if self.properties[key] is not None:
-                add += key + str(self.properties[key]) + ","
-        return self.symb + add[:-1]
-
-
-class DummyGenericProperty:
-    def __init__(self, t: type, default=None):
-        self.type = t
-        self.value = default
-        self.req = default is None
-
-    def set(self, value):
-        assert (type(value) is self.type)
-        self.value = value
-
-    def get(self):
-        return self.value
-
-    def __str__(self):
-        return str(self.value)
-
-
-test_config = list()
-test_config.append(DummyConfig("L-BFGS", "Standard Built-In Local Optimzier", "lbfgs:"))
-test_config[0].properties = {
-    "backend=": '<font color="red">&lt;GENERIC BACKEND&gt;</font>',
-    "maxiter=": DummyGenericProperty(int, 100)
-}
+    def parse_locopt_algo(self, string: str):
+        for key in self.tags:
+            string = re.sub(key, self.tags[key], string)
+        self.current.set(string)

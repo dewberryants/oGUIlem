@@ -1,4 +1,4 @@
-from . import config
+from oguilem.configuration import config
 
 conf = config.OGUILEMConfig()
 
