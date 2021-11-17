@@ -5,13 +5,17 @@ import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
-from oguilem.configuration.geometry import OGOLEMMolecule
+from oguilem.configuration.geometry import OGUILEMMolecule
 
 
 class OGUILEMGeometryTab(qW.QWidget):
     def __init__(self):
         super().__init__()
         layout = qW.QHBoxLayout()
+        self.entity_display = qW.QLineEdit()
+        self.entity_display.setReadOnly(True)
+        self.entity_display.setStyleSheet("min-width: 40px; max-width:40px")
+        conf.geometry.changed.connect(self.update_entities)
         self.accept_btn = qW.QPushButton("Apply")
         self.accept_btn.setEnabled(False)
         self.accept_btn.clicked.connect(self.update_current_molecule)
@@ -33,10 +37,8 @@ class OGUILEMGeometryTab(qW.QWidget):
         info_row.addWidget(btn2)
         info_row.addSpacerItem(qW.QSpacerItem(1, 0, qW.QSizePolicy.Expanding))
         info_row.addWidget(qW.QLabel("Total Entities:"))
-        line_edit = qW.QLineEdit()
-        line_edit.setReadOnly(True)
-        line_edit.setStyleSheet("min-width: 40px; max-width:40px")
-        info_row.addWidget(line_edit)
+
+        info_row.addWidget(self.entity_display)
         layout_g1.addLayout(info_row)
         layout_g1.addWidget(self.mol_list)
         group1.setLayout(layout_g1)
@@ -59,6 +61,9 @@ class OGUILEMGeometryTab(qW.QWidget):
 
         self.setLayout(layout)
 
+    def update_entities(self):
+        self.entity_display.setText(str(conf.geometry.num_entities()))
+
     def open_mol_add(self):
         popup = OGUILEMAddMolDialog(self)
         ret = popup.exec()
@@ -72,8 +77,8 @@ class OGUILEMGeometryTab(qW.QWidget):
 
 
 class GeometryMoleculeList(qW.QListView):
-    none_molecule = OGOLEMMolecule([""])
-    selection_changed = qC.pyqtSignal(OGOLEMMolecule)
+    none_molecule = OGUILEMMolecule([""])
+    selection_changed = qC.pyqtSignal(OGUILEMMolecule)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -83,9 +88,13 @@ class GeometryMoleculeList(qW.QListView):
         conf.geometry.changed.connect(self.update_list_from_config)
 
     def update_list_from_config(self):
+        row_before = self.selectionModel().currentIndex().row()
+        self.selectionModel().clearSelection()
         self.model().removeRows(0, self.model().rowCount())
         for n in range(len(conf.geometry)):
             self.model().appendRow(qG.QStandardItem("Molecule " + str(n)))
+        new_index = self.model().index(row_before, 0)
+        self.selectionModel().select(new_index, qC.QItemSelectionModel.Select | qC.QItemSelectionModel.Rows)
 
     def handle_selection(self, selection: qC.QItemSelection):
         try:
@@ -100,7 +109,7 @@ class GeometryMoleculeList(qW.QListView):
         if self.model().rowCount() > 0:
             try:
                 selected = self.selectionModel().selection().indexes()[0].row()
-                conf.geometry.molecules[selected].content = content
+                conf.geometry.update_mol(selected, content)
             except IndexError:
                 print("No valid selection!")
 
@@ -128,7 +137,7 @@ class OGUILEMAddMolDialog(qW.QDialog):
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.text_cache = ""
-        self.mol = OGOLEMMolecule([""])
+        self.mol = OGUILEMMolecule([""])
         layout = qW.QVBoxLayout()
 
         grid = qW.QGridLayout()

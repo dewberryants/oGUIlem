@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from PyQt5.QtCore import pyqtSignal, QObject
@@ -9,13 +10,13 @@ class OGUILEMGeometryConfig(QObject):
     def __init__(self):
         super().__init__()
         self.particles: int = 0
-        self.molecules: List[OGOLEMMolecule] = list()
+        self.molecules: List[OGUILEMMolecule] = list()
 
     def __len__(self):
         return len(self.molecules)
 
     def __iadd__(self, other):
-        if type(other) is OGOLEMMolecule:
+        if type(other) is OGUILEMMolecule:
             self.molecules.append(other)
         else:
             raise TypeError("Cannot add %s to OGOLEMGeometry!" % str(type(other)))
@@ -24,6 +25,20 @@ class OGUILEMGeometryConfig(QObject):
 
     def __iter__(self):
         return iter(self.molecules)
+
+    def num_entities(self) -> int:
+        num = 0
+        for mol in self:
+            match = re.search(r"(MoleculeRepetitions=)([0-9]+)", "\n".join(mol.content))
+            if match:
+                num += int(match[2])
+            else:
+                num += 1
+        return num
+
+    def update_mol(self, index, new_content: str):
+        self.molecules[index].content = new_content
+        self.changed.emit()
 
     def pop(self, index):
         popped = self.molecules.pop(index)
@@ -50,11 +65,11 @@ class OGUILEMGeometryConfig(QObject):
                     except StopIteration:
                         raise RuntimeError("Dangling <MOLECULE> tag in configuration!")
                 # Pre-parse the semicolons to spaces
-                self.molecules += [OGOLEMMolecule(["    ".join(line.strip().split(";")) for line in mol_block])]
+                self.molecules += [OGUILEMMolecule(["    ".join(line.strip().split(";")) for line in mol_block])]
         self.changed.emit()
 
 
-class OGOLEMMolecule:
+class OGUILEMMolecule:
     def __init__(self, block: List[str]):
         self.content = block
 

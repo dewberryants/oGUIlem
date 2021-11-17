@@ -71,7 +71,7 @@ class OGUILEMConfig:
 
             # Deal with the rest
             for line in content:
-                if line.strip().strip("LocOptAlgo="):
+                if line.strip().startswith("LocOptAlgo="):
                     self.fitness.parse_locopt_algo(line.strip()[11:])
                 else:
                     for key in self.options.values:

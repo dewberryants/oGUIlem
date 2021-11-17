@@ -9,7 +9,6 @@ class GeometryUnitTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.conf = None
-        self.mol = None
 
 
 if __name__ == '__main__':
