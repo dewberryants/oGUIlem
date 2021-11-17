@@ -1,3 +1,5 @@
+import re
+
 import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
@@ -22,9 +24,9 @@ class OGUILEMFitnessTab(qW.QWidget):
 
         tabs = qW.QTabWidget()
         locopt, generics, calcs = fitness
-        tabs.addTab(FitnessBlockProvider(edit, locopt, checkbox), "Local Optimizers")
-        tabs.addTab(FitnessBlockProvider(edit, generics, checkbox), "Generic Backends")
-        tabs.addTab(FitnessBlockProvider(edit, calcs, checkbox), "Cartesian Backends")
+        tabs.addTab(FitnessBlockProvider(edit, locopt, checkbox, tabs), "Local Optimizers")
+        tabs.addTab(FitnessBlockProvider(edit, generics, checkbox, tabs), "Generic Backends")
+        tabs.addTab(FitnessBlockProvider(edit, calcs, checkbox, tabs), "Cartesian Backends")
         layout.addWidget(tabs)
 
         self.setLayout(layout)
@@ -56,10 +58,11 @@ class InactiveDelegate(qW.QStyledItemDelegate):
 
 
 class FitnessBlockProvider(qW.QTableView):
-    def __init__(self, line_edit: qW.QTextEdit, config, checkbox: qW.QCheckBox):
+    def __init__(self, line_edit: qW.QTextEdit, config, checkbox: qW.QCheckBox, tabs: qW.QTabWidget):
         super().__init__()
         self.config = FitnessListHelper(config)
         self.checkbox = checkbox
+        self.tabs = tabs
         fitness_model = qG.QStandardItemModel()
         fitness_model.setHorizontalHeaderItem(0, qG.QStandardItem("Evaluator"))
         fitness_model.setHorizontalHeaderItem(1, qG.QStandardItem("Description"))
@@ -82,7 +85,39 @@ class FitnessBlockProvider(qW.QTableView):
         text = ""
         if len(self.line_edit.document().toPlainText()) > 0:
             text = self.line_edit.document().toHtml()
-        text += self.config.get(index, self.checkbox.isChecked())
+            error_dialog = qW.QMessageBox()
+            error_dialog.setStandardButtons(qW.QMessageBox.Yes | qW.QMessageBox.Cancel)
+            error_dialog.setDefaultButton(qW.QMessageBox.Cancel)
+            error_dialog.setText("No sensible space for this. Append in new line?")
+            x = None
+            # Check the corresponding tags and replace (seems a little smarter)
+            if self.tabs.currentIndex() == 0:
+                pattern = r'<span style=" color:#ff0000;">&lt;LOCAL OPTIMIZER&gt;</span>'
+                if not re.search(pattern, text):
+                    x = error_dialog.exec_()
+            elif self.tabs.currentIndex() == 1:
+                pattern = r'<span style=" color:#ff0000;">&lt;GENERIC BACKEND&gt;</span>'
+                if not re.search(pattern, text):
+                    x = error_dialog.exec_()
+            elif self.tabs.currentIndex() == 2:
+                pattern = r'<span style=" color:#ff0000;">&lt;CALCULATOR BACKEND&gt;</span>'
+                if not re.search(pattern, text):
+                    x = error_dialog.exec_()
+            else:
+                raise IOError("Bad Index in FitnessBox. This is a bug!")
+            if x is not None:
+                # No fitting tag was found, so we either append or do nothing.
+                if x == 16384:
+                    text += self.config.get(index, self.checkbox.isChecked())
+                else:
+                    return
+            else:
+                # A fitting tag was found. Replace and we're happy.
+                text = re.sub(pattern, self.config.get(index, self.checkbox.isChecked()), text, 1)
+        else:
+            if self.tabs.currentIndex() != 0:
+                print("Insane request!")
+            text = self.config.get(index, self.checkbox.isChecked())
         self.line_edit.setText(text)
 
 
