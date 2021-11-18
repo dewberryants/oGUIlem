@@ -4,6 +4,7 @@ LocOptAlgo=lbfgs:backend=xyz:universal
 PoolSize=64
 NumberOfGlobIterations=10000
 ThreshLocOptGradient=1E-5
+PreSanityCD=false
 <GEOMETRY>
     NumberOfParticles=12
     <MOLECULE>

@@ -1,19 +1,21 @@
 <fitness>
     <locopt name="L-BFGS" id="lbfgs:">
         Default Built-In optimizer using both energy and gradient information for minimzation. Requires a generic
-        backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules)
+        backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules). The fitness
+        is the minimized value returned from this Cartesian backend.
         <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
         <option id="maxiter=" required="False">100</option>
     </locopt>
     <locopt name="FIRE" id="fire:">
         Built-In optimizer using only gradient information. Requires a generic
-        backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules)
+        backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules). The fitness
+        is the minimized value returned from this Cartesian backend.
         <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
         <option id="maxiter=" required="False">100</option>
     </locopt>
     <generic name="Cartesian" id="xyz:">
         Generic Backend for Cartesian Problems (e.g. Molecules and Atoms). Requires a calculator backend to be able to
-        provide energies and gradients back to local optimizers.
+        provide energies and gradients.
         <option id="backend" required="True" label="">&lt;CALCULATOR BACKEND&gt;</option>
     </generic>
     <calculator name="Universal Force Field (UFF)" id="universal">

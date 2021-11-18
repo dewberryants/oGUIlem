@@ -66,9 +66,9 @@ class OGUILEMCentralWidget(qW.QWidget):
         layout = qW.QVBoxLayout()
         tabs = qW.QTabWidget()
         tabs.addTab(OGUILEMCalcInfoTab(), "Main")
-        tabs.addTab(OGUILEMGeneticAlgoTab(), "Genetic Algorithm")
         tabs.addTab(OGUILEMGeometryTab(), "Geometry")
         tabs.addTab(OGUILEMFitnessTab(), "Fitness Function")
+        tabs.addTab(OGUILEMGeneticAlgoTab(), "Genetic Algorithm")
         tabs.addTab(OGUILEMCalcInfoTab(), "Advanced")
         tabs.setTabEnabled(4, False)
 
