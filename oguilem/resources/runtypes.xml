@@ -1,8 +1,0 @@
-<runtypes>
-    <runtype name="Cluster" id="clst">
-        Run a global optimization of atom or molecule clusters.
-    </runtype>
-    <runtype name="Cluster on Surface" id="clstenv">
-        Run a global optimization of atom or molecule clusters with an additional static surface.
-    </runtype>
-</runtypes>

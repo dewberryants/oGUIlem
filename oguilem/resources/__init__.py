@@ -4,40 +4,14 @@ from xml.etree.ElementTree import parse
 import pkg_resources as pr
 
 
-def _parse_crossovers():
-    tree = parse(pr.resource_stream("oguilem.resources", "crossover.xml"))
+def _parse_globopt():
+    tree = parse(pr.resource_stream("oguilem.resources", "globopt.xml"))
     ret = dict()
     for node in tree.getroot():
         try:
             id = node.attrib["id"]
         except KeyError:
-            raise IOError("Could not parse crossover.xml because one of the xover tags was missing"
-                          + " the 'id' attribute.")
-        ret[id] = _Node(node)
-    return ret
-
-
-def _parse_runtypes():
-    tree = parse(pr.resource_stream("oguilem.resources", "runtypes.xml"))
-    ret = dict()
-    for node in tree.getroot():
-        try:
-            id = node.attrib["id"]
-        except KeyError:
-            raise IOError("Could not parse runtypes.xml because one of the runtype tags was missing"
-                          + " the 'id' attribute.")
-        ret[id] = _Node(node)
-    return ret
-
-
-def _parse_mutations():
-    tree = parse(pr.resource_stream("oguilem.resources", "mutations.xml"))
-    ret = dict()
-    for node in tree.getroot():
-        try:
-            id = node.attrib["id"]
-        except KeyError:
-            raise IOError("Could not parse mutations.xml because one of the mutation tags was missing"
+            raise IOError("Could not parse globopt.xml because one of the xover tags was missing"
                           + " the 'id' attribute.")
         ret[id] = _Node(node)
     return ret
@@ -105,10 +79,8 @@ class _Node:
             self.opts.append(_Node(opt))
 
 
-crossovers = _parse_crossovers()
-runtypes = _parse_runtypes()
-mutations = _parse_mutations()
+globopt = _parse_globopt()
 options = _parse_general()
 fitness = _parse_fitness()
 
-__all__ = [crossovers, runtypes, mutations, options, fitness]
+__all__ = [globopt, options, fitness]

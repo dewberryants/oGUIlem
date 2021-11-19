@@ -1,0 +1,22 @@
+<globopt>
+    <!--
+    CROSSOVER OPERATORS
+    -->
+    <crossover name="Sweden" id="swd">
+        Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic
+        operation that will likely produce good results in almost all run types.
+        <option id="cutstyle=" required="False">1</option>
+    </crossover>
+    <crossover name="Portugal" id="port">
+        Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic
+        operation that will likely produce good results in almost all run types.
+        <option id="numberofcuts=" required="False" label="">1</option>
+    </crossover>
+    <!--
+    MUTATION OPERATORS
+    -->
+    <mutation name="Monte Carlo" id="mc">
+        Randomly mutate coordinates around.
+        <option id="mode=" required="False">one</option>
+    </mutation>
+</globopt>
