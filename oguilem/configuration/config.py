@@ -73,6 +73,8 @@ class OGUILEMConfig:
             for line in content:
                 if line.strip().startswith("LocOptAlgo="):
                     self.fitness.parse_locopt_algo(line.strip()[11:])
+                elif line.strip().startswith("GlobOptAlgo="):
+                    self.globopt.parse_globopt_string(line.strip()[12:])
                 else:
                     for key in self.options.values:
                         type = self.options.values[key].type
