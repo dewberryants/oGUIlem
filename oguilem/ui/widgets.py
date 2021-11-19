@@ -59,3 +59,11 @@ class SmartCheckBox(qW.QCheckBox):
             self.connected_value.value = True
         else:
             self.connected_value.value = False
+
+
+class InactiveDelegate(qW.QStyledItemDelegate):
+    def __init__(self):
+        super().__init__()
+
+    def createEditor(self, parent: qW.QWidget, option, index) -> qW.QWidget:
+        pass

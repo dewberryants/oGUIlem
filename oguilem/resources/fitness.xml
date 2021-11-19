@@ -8,6 +8,7 @@
         is the minimized value returned from this Cartesian backend.
         <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
         <option id="maxiter=" required="False">100</option>
+        <option id="retries=" required="False">2</option>
     </locopt>
     <locopt name="FIRE" id="fire:">
         Built-In optimizer using only gradient information. Requires a generic

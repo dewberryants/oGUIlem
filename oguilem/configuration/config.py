@@ -1,6 +1,6 @@
 import re
 
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel
 
 from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
 from oguilem.configuration.ga import OGUILEMGlobOptConfig
@@ -141,47 +141,3 @@ class OGUILEMGeneralConfig:
     def set_to_default(self):
         for key in options:
             self.values[key].set(self.defaults[key])
-
-
-class _NodeItem(QStandardItem):
-    def __init__(self, node, ignore_opts=False):
-        super().__init__()
-        self.choices = None
-        if node.id:
-            self.id = node.id
-        if node.name:
-            self.setText(node.name)
-        if node.descr:
-            self.setToolTip(node.descr)
-        if node.opts and not ignore_opts:
-            for opt in node.opts:
-                if len(opt.opts) >= 1:
-                    choices = QStandardItemModel()
-                    for opt_opt in opt.opts:
-                        opt_item = _NodeItem(opt_opt, ignore_opts=True)
-                        if opt_opt.user_defined:
-                            opt_item.setEditable(True)
-                        choices.appendRow(opt_item)
-                    item = _NodeItem(opt, ignore_opts=True)
-                    item.choices = choices
-                    self.appendRow([item, choices.item(0, 0).clone()])
-                else:
-                    opt_item = _NodeItem(opt)
-                    if opt.user_defined:
-                        opt_item.setEditable(True)
-                    self.appendRow([opt_item, _EmptyItem()])
-        self.setEditable(False)
-
-    def clone(self):
-        ret = super().clone()
-        rows = self.rowCount()
-        if rows > 0:
-            for n in range(rows):
-                ret.appendRow([self.child(n, 0).clone(), self.child(n, 1).clone()])
-        return ret
-
-
-class _EmptyItem(QStandardItem):
-    def __init__(self):
-        super().__init__("")
-        self.setEditable(False)

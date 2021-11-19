@@ -6,15 +6,21 @@ import pkg_resources as pr
 
 def _parse_globopt():
     tree = parse(pr.resource_stream("oguilem.resources", "globopt.xml"))
-    ret = dict()
+    mutations = dict()
+    crossovers = dict()
     for node in tree.getroot():
         try:
-            id = node.attrib["id"]
+            key = node.attrib["id"]
         except KeyError:
             raise IOError("Could not parse globopt.xml because one of the xover tags was missing"
                           + " the 'id' attribute.")
-        ret[id] = _Node(node)
-    return ret
+        if node.tag == "mutation":
+            mutations[key] = _Node(node)
+        elif node.tag == "crossover":
+            crossovers[key] = _Node(node)
+        else:
+            raise IOError("Could not parse fitness.xml because one of the tag identifiers was invalid: '%s'" % node.tag)
+    return mutations, crossovers
 
 
 def _parse_general():

@@ -4,7 +4,9 @@ import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
+from oguilem.configuration.utils import BuildingBlockHelper
 from oguilem.resources import fitness
+from oguilem.ui.widgets import InactiveDelegate
 
 
 class OGUILEMFitnessTab(qW.QWidget):
@@ -15,10 +17,10 @@ class OGUILEMFitnessTab(qW.QWidget):
         layout.addWidget(qW.QLabel("Local Optimization Algorithm"))
 
         edit = FitnessDisplay()
-        edit.setPlaceholderText("<LOCAL OPTIMIZER>")
+        edit.setPlaceholderText("<Choose a local optimizer by double-clicking>")
         layout.addWidget(edit)
 
-        layout.addWidget(qW.QLabel("Library of building Blocks (Double-click to add!)"))
+        layout.addWidget(qW.QLabel("Library of building Blocks"))
         checkbox = qW.QCheckBox("Add all optional Settings (with their default values)")
         layout.addWidget(checkbox)
 
@@ -28,11 +30,13 @@ class OGUILEMFitnessTab(qW.QWidget):
         tabs.addTab(FitnessBlockProvider(edit, generics, checkbox, tabs), "Generic Backends")
         tabs.addTab(FitnessBlockProvider(edit, calcs, checkbox, tabs), "Cartesian Backends")
         layout.addWidget(tabs)
-
+        self.tabs = tabs
         self.setLayout(layout)
 
-    def open_edit(self):
-        pass
+    def showEvent(self, a0) -> None:
+        widget = self.tabs.widget(0)
+        widget.horizontalHeader().reset()
+        widget.verticalHeader().reset()
 
 
 class FitnessDisplay(qW.QTextEdit):
@@ -40,6 +44,9 @@ class FitnessDisplay(qW.QTextEdit):
         super().__init__()
         conf.fitness.current.changed.connect(self.update_from_config)
         self.textChanged.connect(self.update_to_config)
+        self.setLineWrapMode(qW.QTextEdit.NoWrap)
+        self.setMaximumHeight(2 * self.fontMetrics().height() + self.fontMetrics().lineSpacing())
+        self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Preferred)
 
     def update_from_config(self):
         self.document().setPlainText(conf.fitness.current.get())
@@ -49,40 +56,35 @@ class FitnessDisplay(qW.QTextEdit):
         conf.fitness.current.value = self.document().toPlainText()
 
 
-class InactiveDelegate(qW.QStyledItemDelegate):
-    def __init__(self):
-        super().__init__()
-
-    def createEditor(self, parent: qW.QWidget, option, index) -> qW.QWidget:
-        pass
-
-
 class FitnessBlockProvider(qW.QTableView):
     def __init__(self, line_edit: qW.QTextEdit, config, checkbox: qW.QCheckBox, tabs: qW.QTabWidget):
         super().__init__()
-        self.config = FitnessListHelper(config)
+        self.config = BuildingBlockHelper(config)
         self.checkbox = checkbox
         self.tabs = tabs
-        fitness_model = qG.QStandardItemModel()
-        fitness_model.setHorizontalHeaderItem(0, qG.QStandardItem("Evaluator"))
-        fitness_model.setHorizontalHeaderItem(1, qG.QStandardItem("Description"))
-        for entry in self.config.table:
-            fitness_model.appendRow([qG.QStandardItem(entry[0]), qG.QStandardItem(entry[1])])
-        self.setModel(fitness_model)
-        self.horizontalHeader().setSectionResizeMode(qW.QHeaderView.Stretch)
-        self.verticalHeader().setSectionResizeMode(qW.QHeaderView.ResizeToContents)
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
         self.setWordWrap(True)
         self.setCornerButtonEnabled(False)
         self.setSelectionMode(qW.QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(qW.QAbstractItemView.SelectRows)
         self.setItemDelegate(InactiveDelegate())
         self.line_edit: qW.QTextEdit = line_edit
+        fitness_model = qG.QStandardItemModel()
+        fitness_model.setHorizontalHeaderItem(0, qG.QStandardItem("Evaluator"))
+        fitness_model.setHorizontalHeaderItem(1, qG.QStandardItem("Description"))
+        for entry in self.config.table:
+            fitness_model.appendRow([qG.QStandardItem(entry[0]), qG.QStandardItem(entry[1])])
+        self.setModel(fitness_model)
+        self.verticalHeader().setSectionResizeMode(qW.QHeaderView.ResizeToContents)
+        self.horizontalHeader().setSectionResizeMode(0, qW.QHeaderView.ResizeToContents)
+        self.horizontalHeader().setSectionResizeMode(1, qW.QHeaderView.Stretch)
+
+    def showEvent(self, a0) -> None:
+        super().showEvent(a0)
+        self.horizontalHeader().reset()
+        self.verticalHeader().reset()
 
     def mouseDoubleClickEvent(self, e: qG.QMouseEvent) -> None:
         index = self.selectedIndexes()[0].row()
-        text = ""
         if len(self.line_edit.document().toPlainText()) > 0:
             text = self.line_edit.document().toHtml()
             error_dialog = qW.QMessageBox()
@@ -115,38 +117,5 @@ class FitnessBlockProvider(qW.QTableView):
                 # A fitting tag was found. Replace and we're happy.
                 text = re.sub(pattern, self.config.get(index, self.checkbox.isChecked()), text, 1)
         else:
-            if self.tabs.currentIndex() != 0:
-                print("Insane request!")
             text = self.config.get(index, self.checkbox.isChecked())
         self.line_edit.setText(text)
-
-
-class FitnessListHelper:
-    def __init__(self, config):
-        self.table = list()
-        # Config is a dict of _Node items
-        for key in config:
-            label = key if config[key].label is None else config[key.label]
-            required = label
-            optional = ""
-            for item in config[key].opts:
-                item_label = item.id if item.label is None else item.label
-                if item.required:
-                    descr = item.descr.replace("<", "&lt;").replace(">", "&gt;")
-                    required += item_label + "<font color=\"red\">" + descr + "</font>" + ","
-                else:
-                    optional += item_label + item.descr + ","
-            if len(required) > 0 and required[-1] == ",":
-                required = required[:-1]
-            if len(optional) > 0 and optional[-1] == ",":
-                optional = optional[:-1]
-            self.table.append((config[key].name, config[key].descr, required, optional))
-
-    def get(self, index: int, optionals=False) -> str:
-        if optionals:
-            text = self.table[index][2]
-            if len(self.table[index][3]) > 0:
-                text += "," + self.table[index][3]
-            return text
-        else:
-            return self.table[index][2]

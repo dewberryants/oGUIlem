@@ -24,11 +24,9 @@ class OGUILEMMainWindow(qW.QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        size = (qW.qApp.desktop().screenGeometry().width() * 0.6,
-                qW.qApp.desktop().screenGeometry().height() * 0.6)
-        self.setGeometry(qW.qApp.desktop().screenGeometry().width() * 0.1 / 2,
-                         qW.qApp.desktop().screenGeometry().height() * 0.1 / 2,
-                         size[0], size[1])
+        self.setGeometry((qW.qApp.desktop().screenGeometry().width() - self.geometry().width()) / 2,
+                         (qW.qApp.desktop().screenGeometry().height() - self.geometry().height()) / 2,
+                         self.geometry().width(), self.geometry().height())
 
         file_menu = self.menuBar().addMenu("File")
         q_open = qW.QAction("Open...", self)
