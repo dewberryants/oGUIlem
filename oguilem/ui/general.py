@@ -192,8 +192,3 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 class OGUILEMRunTypeBox(qW.QComboBox):
     def __init__(self):
         super().__init__()
-        self.setModel(conf.runtype.get_model())
-        conf.set_runtype(self.get_current_id())
-
-    def get_current_id(self):
-        return self.model().item(self.currentIndex()).id
