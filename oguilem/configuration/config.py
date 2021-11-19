@@ -3,16 +3,16 @@ import re
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
+from oguilem.configuration.ga import OGUILEMGlobOptConfig
 from oguilem.configuration.geometry import OGUILEMGeometryConfig
 from oguilem.configuration.utils import ConnectedValue
-from oguilem.resources import runtypes, crossovers, mutations, options
+from oguilem.resources import options
 
 
 class OGUILEMConfig:
     def __init__(self):
         self.runtype = OGUILEMRunTypeConfig()
-        self.crossover = OGUILEMXOverConfig()
-        self.mutation = OGUILEMMutationConfig()
+        self.globopt = OGUILEMGlobOptConfig()
         self.options = OGUILEMGeneralConfig()
         self.geometry = OGUILEMGeometryConfig()
         self.fitness = OGUILEMFitnessFunctionConfiguration()
@@ -109,64 +109,12 @@ class OGUILEMRunTypeConfig:
         self.id = None
         self.model = QStandardItemModel()
         parent = self.model.invisibleRootItem()
-        for key in runtypes:
-            parent.appendRow(_NodeItem(runtypes[key]))
 
     def set_runtype(self, id):
         self.id = id
 
     def get_model(self):
         return self.model
-
-
-class OGUILEMXOverConfig:
-    def __init__(self):
-        self.choices = QStandardItemModel()
-        parent = self.choices.invisibleRootItem()
-        for key in crossovers:
-            parent.appendRow(_NodeItem(crossovers[key]))
-        self.model = QStandardItemModel()
-        self.model.setHorizontalHeaderItem(0, QStandardItem(""))
-        self.model.setHorizontalHeaderItem(1, QStandardItem(""))
-
-    def get_model(self):
-        return self.model
-
-    def from_model(self, model):
-        self.model = model
-
-    def get_choices(self):
-        return self.choices
-
-    def add_choice_to_model(self, index):
-        item = self.choices.item(index, 0)
-        if item is not None and item.__class__ is _NodeItem:
-            self.model.appendRow([item.clone(), _EmptyItem()])
-
-
-class OGUILEMMutationConfig:
-    def __init__(self):
-        self.choices = QStandardItemModel()
-        parent = self.choices.invisibleRootItem()
-        for key in mutations:
-            parent.appendRow(_NodeItem(mutations[key]))
-        self.model = QStandardItemModel()
-        self.model.setHorizontalHeaderItem(0, QStandardItem(""))
-        self.model.setHorizontalHeaderItem(1, QStandardItem(""))
-
-    def get_model(self):
-        return self.model
-
-    def from_model(self, model):
-        self.model = model
-
-    def get_choices(self):
-        return self.choices
-
-    def add_choice_to_model(self, index):
-        item = self.choices.item(index, 0)
-        if item is not None and item.__class__ is _NodeItem:
-            self.model.appendRow([item.clone(), _EmptyItem()])
 
 
 class OGUILEMGeneralConfig:
