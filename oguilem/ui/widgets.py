@@ -3,12 +3,14 @@ import PyQt5.QtWidgets as qW
 
 
 class SmartLineEdit(qW.QLineEdit):
-    def __init__(self, connected_value):
+    def __init__(self, connected_value, minimum_size=False):
         super().__init__()
         self.setAlignment(qC.Qt.AlignRight)
         self.connected_value = connected_value
         self.connected_value.changed.connect(self.update_from_config)
         self.update_from_config()
+        if minimum_size:
+            self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Minimum)
 
     def update_from_config(self):
         self.setText(str(self.connected_value))

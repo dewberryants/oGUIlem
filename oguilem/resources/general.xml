@@ -7,7 +7,7 @@
     <setting key="DoGeometryNiching" type="bool" default="false"/>
     <setting key="NichingAddToStats" type="int" default="50"/>
     <setting key="noOfIndividualsPerNicheAtMax" type="int" default="50"/>
-    <setting key="AcceptableFitness" type="float" default="-1.78e308"/>
+    <setting key="AcceptableFitness" type="float" default="-42.0"/>
     <setting key="crossPossibility" type="float" default="1.0"/>
     <setting key="molCrossPoss" type="bool" default="1.0"/>
     <setting key="mutatePossibility" type="float" default="0.05"/>

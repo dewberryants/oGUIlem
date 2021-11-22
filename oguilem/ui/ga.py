@@ -6,21 +6,22 @@ import PyQt5.QtWidgets as qW
 from oguilem.configuration import conf
 from oguilem.configuration.utils import BuildingBlockHelper, ConnectedValue
 from oguilem.resources import globopt
-from oguilem.ui.widgets import InactiveDelegate
+from oguilem.ui.widgets import InactiveDelegate, SmartLineEdit
 
 
 class OGUILEMGeneticAlgoTab(qW.QWidget):
     def __init__(self):
         super().__init__()
         self.tabs = qW.QTabWidget()
+        self.accept_fitness = qW.QCheckBox("Acceptable Fitness")
         self.init_ui()
 
     def init_ui(self):
+        layout = qW.QVBoxLayout()
         columns = qW.QHBoxLayout()
 
         layout_left = qW.QVBoxLayout()
 
-        checkbox = qW.QCheckBox("Add all optional Settings (with their default values)")
         crossover_display = ConnectedDisplay(conf.globopt.crossover, "<Choose a crossover operator by double-clicking>")
         mutation_display = ConnectedDisplay(conf.globopt.mutation, "<Choose a mutation operator by double-clicking>")
 
@@ -28,25 +29,38 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
         layout_left.addWidget(crossover_display)
         layout_left.addWidget(qW.QLabel("Mutation Operator"))
         layout_left.addWidget(mutation_display)
-        layout_left.addWidget(qW.QLabel("Library of Operators"))
-        layout_left.addWidget(checkbox)
-
-        mutations, crossovers = globopt
-        self.tabs.addTab(BlockProvider(crossover_display, crossovers, checkbox, "Crossover", "CROSSOVER"), "Crossovers")
-        self.tabs.addTab(BlockProvider(mutation_display, mutations, checkbox, "Mutation", "MUTATION"), "Mutations")
-        layout_left.addWidget(self.tabs)
 
         layout_right = qW.QVBoxLayout()
 
         group3 = qW.QGroupBox("General GA Settings")
-        layout3 = qW.QVBoxLayout()
-        layout3.addWidget(qW.QCheckBox("Test"))
+        group3.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout3 = qW.QGridLayout()
+        layout3.addWidget(qW.QLabel("Crossover Probability"), 0, 0)
+        layout3.addWidget(SmartLineEdit(conf.options.values["crossPossibility"], True), 0, 1)
+        layout3.addWidget(qW.QLabel("Mutation Probability"), 1, 0)
+        layout3.addWidget(SmartLineEdit(conf.options.values["mutatePossibility"], True), 1, 1)
+        layout3.addWidget(self.accept_fitness, 2, 0)
+        fitness = SmartLineEdit(conf.options.values["AcceptableFitness"], True)
+        fitness.setEnabled(False)
+        self.accept_fitness.clicked.connect(lambda: fitness.setEnabled(not fitness.isEnabled()))
+        layout3.addWidget(fitness, 2, 1)
         group3.setLayout(layout3)
         layout_right.addWidget(group3)
 
         columns.addLayout(layout_left)
         columns.addLayout(layout_right)
-        self.setLayout(columns)
+
+        layout.addLayout(columns)
+
+        checkbox = qW.QCheckBox("Add all optional Settings (with their default values)")
+        layout.addWidget(qW.QLabel("Library of Operators"))
+        layout.addWidget(checkbox)
+        mutations, crossovers = globopt
+        self.tabs.addTab(BlockProvider(crossover_display, crossovers, checkbox, "Crossover", "CROSSOVER"), "Crossovers")
+        self.tabs.addTab(BlockProvider(mutation_display, mutations, checkbox, "Mutation", "MUTATION"), "Mutations")
+        layout.addWidget(self.tabs)
+
+        self.setLayout(layout)
 
     def showEvent(self, a0) -> None:
         widget = self.tabs.widget(0)
