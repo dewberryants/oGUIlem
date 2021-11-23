@@ -1,7 +1,5 @@
 import re
 
-from PyQt5.QtGui import QStandardItemModel
-
 from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
 from oguilem.configuration.ga import OGUILEMGlobOptConfig
 from oguilem.configuration.geometry import OGUILEMGeometryConfig
@@ -11,14 +9,18 @@ from oguilem.resources import options
 
 class OGUILEMConfig:
     def __init__(self):
-        self.runtype = OGUILEMRunTypeConfig()
         self.globopt = OGUILEMGlobOptConfig()
         self.options = OGUILEMGeneralConfig()
         self.geometry = OGUILEMGeometryConfig()
         self.fitness = OGUILEMFitnessFunctionConfiguration()
 
-    def set_runtype(self, id):
-        self.runtype.set_runtype(id)
+    def save_to_file(self, fname):
+        content = "###OGOLEM###\n"
+        # content += self.globopt.get_finished_config()
+        # content += self.geometry.get_finished_config()
+        content += self.fitness.get_finished_config()
+        content += self.options.get_finished_config()
+        print(content)
 
     def load_from_file(self, file):
         self.options.set_to_default()
@@ -106,19 +108,6 @@ def parse_value(line, type):
     return value, index
 
 
-class OGUILEMRunTypeConfig:
-    def __init__(self):
-        self.id = None
-        self.model = QStandardItemModel()
-        parent = self.model.invisibleRootItem()
-
-    def set_runtype(self, id):
-        self.id = id
-
-    def get_model(self):
-        return self.model
-
-
 class OGUILEMGeneralConfig:
     def __init__(self):
         self.defaults = dict()
@@ -143,3 +132,12 @@ class OGUILEMGeneralConfig:
     def set_to_default(self):
         for key in options:
             self.values[key].set(self.defaults[key])
+
+    def get_finished_config(self) -> str:
+        content = ""
+        for key in self.values:
+            self.values[key].request_update()
+            value = self.values[key].value
+            if value != self.defaults[key]:
+                content += "\n" + key + "=" + str(self.values[key])
+        return content

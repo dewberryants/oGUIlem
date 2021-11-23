@@ -28,3 +28,7 @@ class OGUILEMFitnessFunctionConfiguration:
         for key in self.tags:
             string = re.sub(key, self.tags[key], string)
         self.current.set(string)
+
+    def get_finished_config(self) -> str:
+        self.current.request_update()
+        return "\nLocOptAlgo=" + self.current.value

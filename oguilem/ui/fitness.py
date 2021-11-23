@@ -43,7 +43,8 @@ class FitnessDisplay(qW.QTextEdit):
     def __init__(self):
         super().__init__()
         conf.fitness.current.changed.connect(self.update_from_config)
-        self.textChanged.connect(self.update_to_config)
+        conf.fitness.current.update_requested.connect(self.update_to_config)
+        conf.fitness.current.error.connect(self.error_box)
         self.setLineWrapMode(qW.QTextEdit.NoWrap)
         self.setMaximumHeight(2 * self.fontMetrics().height() + self.fontMetrics().lineSpacing())
         self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Preferred)
@@ -52,8 +53,16 @@ class FitnessDisplay(qW.QTextEdit):
         self.document().setPlainText(conf.fitness.current.get())
 
     def update_to_config(self):
-        # Set directly to circumvent signal cascade
-        conf.fitness.current.value = self.document().toPlainText()
+        text = self.document().toPlainText()
+        if "\n" in text:
+            conf.fitness.current.error.emit()
+        conf.fitness.current.set(text)
+
+    def error_box(self):
+        error_dialog = qW.QMessageBox()
+        error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+        error_dialog.setText("Local Optimization Algorithm String must be exactly one line!")
+        error_dialog.exec()
 
 
 class FitnessBlockProvider(qW.QTableView):

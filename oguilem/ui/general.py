@@ -35,6 +35,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
         q_open.triggered.connect(self.open_file_dialog)
         file_menu.addAction(q_open)
         q_save = qW.QAction("Save...", self)
+        q_save.triggered.connect(self.save_file_dialog)
         file_menu.addAction(q_save)
         file_menu.addSeparator()
         q_exit = qW.QAction("Exit", self)
@@ -58,6 +59,11 @@ class OGUILEMMainWindow(qW.QMainWindow):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
         if file_name:
             conf.load_from_file(file_name)
+
+    def save_file_dialog(self):
+        file_name, _ = qW.QFileDialog.getSaveFileName(self, "Save Config...", "", "OGOLEM Config Files (*.ogo)")
+        if file_name:
+            conf.save_to_file(file_name)
 
 
 class OGUILEMCentralWidget(qW.QWidget):
@@ -83,6 +89,8 @@ class OGUILEMCalcInfoTab(qW.QWidget):
     def init_ui(self):
         layout = qW.QVBoxLayout()
 
+        layout.addWidget(qW.QLabel("Welcome. Start by selecting a Preset from the Box below!"))
+
         group = qW.QGroupBox("OGOLEM Run Preset")
         layout_group = qW.QVBoxLayout()
         layout_group.addWidget(OGUILEMPresetBox())
@@ -95,6 +103,13 @@ class OGUILEMCalcInfoTab(qW.QWidget):
         layout_gen.addWidget(SmartLineEdit(conf.options.values["PoolSize"]), 0, 1)
         layout_gen.addWidget(qW.QLabel("Global Optimization Iterations"), 1, 0)
         layout_gen.addWidget(SmartLineEdit(conf.options.values["NumberOfGlobIterations"]), 1, 1)
+
+        expl_label = qW.QLabel("Be aware that by default, Sanity Checks are active (see 'Advanced' Tab)."
+                               " If your ogolem run is not producing any individuals, you might need to adjust"
+                               " the BlowFactors (bond tolerances) or debug the problem by turning up the"
+                               " Debug Level.")
+        expl_label.setWordWrap(True)
+        layout.addWidget(expl_label)
 
         layout.addLayout(layout_gen)
 
@@ -110,14 +125,18 @@ class OGUILEMPresetBox(qW.QComboBox):
         for entry in presets:
             model.appendRow(qG.QStandardItem(entry[0]))
         self.setModel(model)
-        self.last_index = 0
-        self.setCurrentIndex(0)
-        conf.load_from_file(presets[0][2])
+        self.last_index = -1
+        self.setCurrentIndex(-1)
         self.currentIndexChanged.connect(self.change_preset)
         self.reverse = False
 
     def change_preset(self):
         if self.reverse:
+            return
+        if self.last_index == -1:
+            index = self.currentIndex()
+            conf.load_from_file(presets[index][2])
+            self.last_index = index
             return
         error_dialog = qW.QMessageBox()
         error_dialog.setStandardButtons(qW.QMessageBox.Yes | qW.QMessageBox.Cancel)

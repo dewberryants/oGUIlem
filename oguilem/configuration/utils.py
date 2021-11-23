@@ -4,6 +4,8 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 class ConnectedValue(QObject):
     changed = pyqtSignal()
+    update_requested = pyqtSignal()
+    error = pyqtSignal()
 
     def __init__(self, value):
         super().__init__()
@@ -21,8 +23,15 @@ class ConnectedValue(QObject):
         elif type(value) is self.type:
             self.value = value
         else:
-            raise ValueError("Could not set connected value!")
+            try:
+                self.value = self.type(value)
+            except ValueError:
+                self.error.emit()
+                return
         self.changed.emit()
+
+    def request_update(self):
+        self.update_requested.emit()
 
     def __str__(self):
         return str(self.value)

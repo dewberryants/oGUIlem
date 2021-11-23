@@ -8,6 +8,8 @@ class SmartLineEdit(qW.QLineEdit):
         self.setAlignment(qC.Qt.AlignRight)
         self.connected_value = connected_value
         self.connected_value.changed.connect(self.update_from_config)
+        self.connected_value.update_requested.connect(self.update_to_config)
+        self.connected_value.error.connect(self.error_box)
         self.update_from_config()
         if minimum_size:
             self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Minimum)
@@ -17,6 +19,12 @@ class SmartLineEdit(qW.QLineEdit):
 
     def update_to_config(self):
         self.connected_value.set(self.text())
+
+    def error_box(self):
+        error_dialog = qW.QMessageBox()
+        error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+        error_dialog.setText("Value Error! '%s' is not of type '%s'!" % (self.text(), str(self.connected_value.type)))
+        error_dialog.exec()
 
 
 class SmartTripleLineEdit(qW.QHBoxLayout):
@@ -30,6 +38,7 @@ class SmartTripleLineEdit(qW.QHBoxLayout):
         self.addWidget(self.edit3)
         self.connected_value = connected_value
         self.connected_value.changed.connect(self.update_from_config)
+        self.connected_value.update_requested.connect(self.update_to_config)
         self.update_from_config()
 
     def update_from_config(self):
@@ -48,6 +57,7 @@ class SmartCheckBox(qW.QCheckBox):
         super().__init__(label)
         self.connected_value = connected_value
         self.connected_value.changed.connect(self.update_from_config)
+        self.connected_value.update_requested.connect(self.update_to_config)
         self.update_from_config()
 
     def update_from_config(self):
@@ -56,11 +66,11 @@ class SmartCheckBox(qW.QCheckBox):
         else:
             self.setCheckState(qC.Qt.Unchecked)
 
-    def update_to_config(self, edit):
-        if edit == qC.Qt.Checked:
-            self.connected_value.value = True
+    def update_to_config(self):
+        if self.isChecked():
+            self.connected_value.set(True)
         else:
-            self.connected_value.value = False
+            self.connected_value.set(False)
 
 
 class InactiveDelegate(qW.QStyledItemDelegate):
