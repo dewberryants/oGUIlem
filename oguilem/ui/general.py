@@ -1,6 +1,8 @@
+import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
+from oguilem.resources import presets
 from oguilem.ui.advanced import OGUILEMAdvancedTab
 from oguilem.ui.fitness import OGUILEMFitnessTab
 from oguilem.ui.ga import OGUILEMGeneticAlgoTab
@@ -83,7 +85,7 @@ class OGUILEMCalcInfoTab(qW.QWidget):
 
         group = qW.QGroupBox("OGOLEM Run Preset")
         layout_group = qW.QVBoxLayout()
-        layout_group.addWidget(qW.QComboBox())
+        layout_group.addWidget(OGUILEMPresetBox())
         group.setLayout(layout_group)
 
         layout.addWidget(group)
@@ -99,3 +101,34 @@ class OGUILEMCalcInfoTab(qW.QWidget):
         layout.addSpacerItem(qW.QSpacerItem(0, 1, vPolicy=qW.QSizePolicy.Expanding))
 
         self.setLayout(layout)
+
+
+class OGUILEMPresetBox(qW.QComboBox):
+    def __init__(self):
+        super().__init__()
+        model = qG.QStandardItemModel()
+        for entry in presets:
+            model.appendRow(qG.QStandardItem(entry[0]))
+        self.setModel(model)
+        self.last_index = 0
+        self.setCurrentIndex(0)
+        conf.load_from_file(presets[0][2])
+        self.currentIndexChanged.connect(self.change_preset)
+        self.reverse = False
+
+    def change_preset(self):
+        if self.reverse:
+            return
+        error_dialog = qW.QMessageBox()
+        error_dialog.setStandardButtons(qW.QMessageBox.Yes | qW.QMessageBox.Cancel)
+        error_dialog.setDefaultButton(qW.QMessageBox.Cancel)
+        error_dialog.setText("You are about to change presets, which will override any unsaved changes! Continue?")
+        x = error_dialog.exec_()
+        if x == 16384:
+            index = self.currentIndex()
+            conf.load_from_file(presets[index][2])
+            self.last_index = index
+        else:
+            self.reverse = True
+            self.setCurrentIndex(self.last_index)
+            self.reverse = False

@@ -1,0 +1,16 @@
+###OGOLEM###
+GlobOptAlgo=cluster{xover(sweden:)mutation(montecarlo:)}
+LocOptAlgo=chained:lbfgs:backend=xyz:untangle:sigma=1.2|xtb:
+PoolSize=64
+NumberOfGlobIterations=10000
+ThreshLocOptGradient=1E-5
+PreSanityCD=false
+<GEOMETRY>
+    NumberOfParticles=12
+    <MOLECULE>
+        MoleculeRepetitions=12
+        O;0.0;0.0;0.0
+        H;1.0;0.0;0.0
+        H;0.0;1.0;0.0
+    </MOLECULE>
+</GEOMETRY>

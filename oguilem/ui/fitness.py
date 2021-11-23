@@ -17,7 +17,7 @@ class OGUILEMFitnessTab(qW.QWidget):
         layout.addWidget(qW.QLabel("Local Optimization Algorithm"))
 
         edit = FitnessDisplay()
-        edit.setPlaceholderText("<Choose a local optimizer by double-clicking>")
+        edit.setPlaceholderText("<Choose a local optimizer by double-clicking in the list below!>")
         layout.addWidget(edit)
 
         layout.addWidget(qW.QLabel("Library of building Blocks"))

@@ -59,6 +59,26 @@ def _parse_fitness():
     return locopts, generics, calcs
 
 
+def _parse_presets():
+    sets = list()
+    tree = parse(pr.resource_stream("oguilem.resources", "presets.xml"))
+    for node in tree.getroot():
+        try:
+            name = node.attrib["name"]
+        except KeyError:
+            raise IOError("Could not parse presets.xml because one of the tags was missing the 'name' attribute.")
+        try:
+            file = node.attrib["file"]
+        except KeyError:
+            raise IOError("Could not parse presets.xml because one of the tags was missing the 'file' attribute.")
+        descr = ""
+        if node.text:
+            descr = node.text
+        path = pr.resource_filename("oguilem.resources.presets", file)
+        sets.append((name, descr, path))
+    return sets
+
+
 class _Node:
     def __init__(self, node):
         self.id = ""
@@ -88,5 +108,6 @@ class _Node:
 globopt = _parse_globopt()
 options = _parse_general()
 fitness = _parse_fitness()
+presets = _parse_presets()
 
-__all__ = [globopt, options, fitness]
+__all__ = [globopt, options, fitness, presets]

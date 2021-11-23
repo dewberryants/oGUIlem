@@ -22,8 +22,10 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
 
         layout_left = qW.QVBoxLayout()
 
-        crossover_display = ConnectedDisplay(conf.globopt.crossover, "<Choose a crossover operator by double-clicking>")
-        mutation_display = ConnectedDisplay(conf.globopt.mutation, "<Choose a mutation operator by double-clicking>")
+        crossover_display = ConnectedDisplay(conf.globopt.crossover,
+                                             "<Choose a crossover operator by double-clicking in the list below!>")
+        mutation_display = ConnectedDisplay(conf.globopt.mutation,
+                                            "<Choose a mutation operator by double-clicking in the list below!>")
 
         layout_left.addWidget(qW.QLabel("Crossover Operator"))
         layout_left.addWidget(crossover_display)
