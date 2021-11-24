@@ -36,7 +36,10 @@ class OGUILEMGeometryConfig(QObject):
                 num += 1
         return num
 
-    def update_mol(self, index, new_content: str):
+    def update_mol(self, index, new_content: list):
+        assert (type(new_content) == list)
+        while "" in new_content:
+            new_content.pop(new_content.index(""))
         self.molecules[index].content = new_content
         self.changed.emit()
 
@@ -76,9 +79,9 @@ class OGUILEMGeometryConfig(QObject):
             for line in molecule.content:
                 pattern = r"[A-Za-z]+\s+[0-9]+\.[0-9]+\s"
                 if re.match(pattern, line):
-                    tmp = re.sub(r"\s+", ";", line)
+                    tmp = re.sub(r"\s+", ";", line.strip())
                 else:
-                    tmp = line
+                    tmp = line.strip()
                 content += "\n        " + tmp
             content += "\n    </MOLECULE>"
         content += "\n</GEOMETRY>"
