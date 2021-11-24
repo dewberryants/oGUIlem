@@ -68,6 +68,22 @@ class OGUILEMGeometryConfig(QObject):
                 self.molecules += [OGUILEMMolecule(["    ".join(line.strip().split(";")) for line in mol_block])]
         self.changed.emit()
 
+    def get_finished_config(self) -> str:
+        content = "<GEOMETRY>"
+        content += "\n    NumberOfParticles=" + str(self.num_entities())
+        for molecule in self.molecules:
+            content += "\n    <MOLECULE>"
+            for line in molecule.content:
+                pattern = r"[A-Za-z]+\s+[0-9]+\.[0-9]+\s"
+                if re.match(pattern, line):
+                    tmp = re.sub(r"\s+", ";", line)
+                else:
+                    tmp = line
+                content += "\n        " + tmp
+            content += "\n    </MOLECULE>"
+        content += "\n</GEOMETRY>"
+        return content
+
 
 class OGUILEMMolecule:
     def __init__(self, block: List[str]):

@@ -75,7 +75,8 @@ class ConnectedDisplay(qW.QTextEdit):
         super().__init__()
         self.value = value
         self.value.changed.connect(self.update_from_config)
-        self.textChanged.connect(self.update_to_config)
+        self.value.update_requested.connect(self.update_to_config)
+        self.value.error.connect(self.error_box)
         self.setPlaceholderText(placeholder_text)
         self.setLineWrapMode(qW.QTextEdit.NoWrap)
         self.setMaximumHeight(2 * self.fontMetrics().height() + self.fontMetrics().lineSpacing())
@@ -85,8 +86,16 @@ class ConnectedDisplay(qW.QTextEdit):
         self.document().setPlainText(self.value.get())
 
     def update_to_config(self):
-        # Set directly to circumvent signal cascade
-        self.value.value = self.document().toPlainText()
+        text = self.document().toPlainText()
+        if "\n" in text:
+            conf.fitness.current.error.emit()
+        conf.fitness.current.set(text)
+
+    def error_box(self):
+        error_dialog = qW.QMessageBox()
+        error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+        error_dialog.setText("Mutation and Crossover Algorithm String must be exactly one line!")
+        error_dialog.exec()
 
 
 class BlockProvider(qW.QTableView):

@@ -16,11 +16,12 @@ class OGUILEMConfig:
 
     def save_to_file(self, fname):
         content = "###OGOLEM###\n"
-        # content += self.globopt.get_finished_config()
-        # content += self.geometry.get_finished_config()
+        content += self.globopt.get_finished_config()
+        content += self.geometry.get_finished_config()
         content += self.fitness.get_finished_config()
         content += self.options.get_finished_config()
-        print(content)
+        with open(fname, "w") as ofile:
+            ofile.write(content)
 
     def load_from_file(self, file):
         self.options.set_to_default()

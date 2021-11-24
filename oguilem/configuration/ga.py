@@ -20,3 +20,10 @@ class OGUILEMGlobOptConfig:
             raise IOError("GlobOpt String did not contain 'crossover(...)' enclosure!")
         self.mutation.set(mutation[1])
         self.crossover.set(crossover[1])
+
+    def get_finished_config(self):
+        content = "GlobOptAlgo=cluster{"
+        content += "xover(" + self.crossover.value + ")"
+        content += "mutation(" + self.mutation.value + ")"
+        content += "}\n"
+        return content
