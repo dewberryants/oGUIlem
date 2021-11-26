@@ -1,4 +1,6 @@
+import os
 import re
+import sys
 
 from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
 from oguilem.configuration.ga import OGUILEMGlobOptConfig
@@ -9,6 +11,7 @@ from oguilem.resources import options
 
 class OGUILEMConfig:
     def __init__(self):
+        self.ui = OGUILEMUIConfig()
         self.globopt = OGUILEMGlobOptConfig()
         self.options = OGUILEMGeneralConfig()
         self.geometry = OGUILEMGeometryConfig()
@@ -142,3 +145,60 @@ class OGUILEMGeneralConfig:
             if value != self.defaults[key]:
                 content += "\n" + key + "=" + str(self.values[key])
         return content
+
+
+def find_config_folder():
+    path = None
+    if sys.platform == 'Windows':
+        path = os.path.join(os.environ['APPDATA'], 'oguilem')
+    else:
+        path = os.path.join(os.environ['HOME'], '.config', 'oguilem')
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    return path
+
+
+class OGUILEMUIConfig:
+    def __init__(self):
+        self.window_size = None
+        self.window_position = None
+        self.java_path = None
+        self.java_vm_variables = None
+        self.environmental_variables = None
+        try:
+            self.recover_from_file()
+        except ValueError:
+            print("There are format errors in the UI config file in '%s'. Using defaults." % find_config_folder())
+        except IOError:
+            print("Config file not found. A new one will generate once the program exits.")
+
+    def recover_from_file(self):
+        path = os.path.join(find_config_folder(), "oguilem.cfg")
+        with open(path, "r") as config:
+            lines = config.readlines()
+        for line in lines:
+            work = line.strip()
+            if work.startswith("WINDOWSIZE"):
+                self.window_size = (int(work.split()[1]), int(work.split()[2]))
+            elif work.startswith("WINDOWPOS"):
+                self.window_position = (int(work.split()[1]), int(work.split()[2]))
+            elif work.startswith("JAVAPATH"):
+                self.java_path = work[8:].strip()
+            elif work.startswith("JAVAVM"):
+                self.java_vm_variables = work[7:].strip()
+            elif work.startswith("ENV"):
+                self.environmental_variables = work[3:].strip()
+
+    def save_to_file(self):
+        path = os.path.join(find_config_folder(), "oguilem.cfg")
+        with open(path, "w") as config:
+            if self.window_size:
+                config.write("WINDOWSIZE %d %d\n" % (self.window_size[0], self.window_size[1]))
+            if self.window_position:
+                config.write("WINDOWPOS %d %d\n" % (self.window_position[0], self.window_position[1]))
+            if self.java_path:
+                config.write("JAVAPATH %s\n" % self.java_path)
+            if self.java_vm_variables:
+                config.write("JAVAVM %s\n" % self.java_vm_variables)
+            if self.java_path:
+                config.write("ENV %s\n" % self.environmental_variables)

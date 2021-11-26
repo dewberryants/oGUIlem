@@ -14,10 +14,10 @@ class OGUILEMApplication(qW.QApplication):
     def __init__(self, argv):
         super().__init__(argv)
 
-    def run(self):
+    def run(self) -> int:
         main_window = OGUILEMMainWindow()
         main_window.show()
-        self.exec_()
+        return self.exec_()
 
 
 class OGUILEMMainWindow(qW.QMainWindow):
@@ -26,9 +26,14 @@ class OGUILEMMainWindow(qW.QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setGeometry((qW.qApp.desktop().screenGeometry().width() - self.geometry().width()) / 2,
-                         (qW.qApp.desktop().screenGeometry().height() - self.geometry().height()) / 2,
-                         self.geometry().width(), self.geometry().height())
+        if not conf.ui.window_position:
+            conf.ui.window_position = ((qW.qApp.desktop().screenGeometry().width() - self.geometry().width()) / 2,
+                                       (qW.qApp.desktop().screenGeometry().height() - self.geometry().height()) / 2)
+        if not conf.ui.window_size:
+            conf.ui.window_size = (self.geometry().width(), self.geometry().height())
+        x, y = conf.ui.window_position
+        width, height = conf.ui.window_size
+        self.setGeometry(x, y, width, height)
 
         file_menu = self.menuBar().addMenu("File")
         q_open = qW.QAction("Open...", self)
@@ -64,6 +69,11 @@ class OGUILEMMainWindow(qW.QMainWindow):
         file_name, _ = qW.QFileDialog.getSaveFileName(self, "Save Config...", "", "OGOLEM Config Files (*.ogo)")
         if file_name:
             conf.save_to_file(file_name)
+
+    def closeEvent(self, a0) -> None:
+        conf.ui.window_position = (self.geometry().x(), self.geometry().y())
+        conf.ui.window_size = (self.geometry().width(), self.geometry().height())
+        super().closeEvent(a0)
 
 
 class OGUILEMCentralWidget(qW.QWidget):
