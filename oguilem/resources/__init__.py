@@ -109,5 +109,6 @@ globopt = _parse_globopt()
 options = _parse_general()
 fitness = _parse_fitness()
 presets = _parse_presets()
+icon = pr.resource_filename("oguilem.resources", "ogo.ico")
 
-__all__ = [globopt, options, fitness, presets]
+__all__ = [globopt, options, fitness, presets, icon]

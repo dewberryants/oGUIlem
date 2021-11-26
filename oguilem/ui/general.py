@@ -2,6 +2,7 @@ import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
+from oguilem.resources import icon
 from oguilem.resources import presets
 from oguilem.ui.advanced import OGUILEMAdvancedTab
 from oguilem.ui.fitness import OGUILEMFitnessTab
@@ -59,6 +60,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
 
         self.setCentralWidget(OGUILEMCentralWidget())
         self.setWindowTitle("oGUIlem")
+        self.setWindowIcon(qG.QIcon(icon))
 
     def open_file_dialog(self):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
@@ -152,6 +154,7 @@ class OGUILEMPresetBox(qW.QComboBox):
         error_dialog.setStandardButtons(qW.QMessageBox.Yes | qW.QMessageBox.Cancel)
         error_dialog.setDefaultButton(qW.QMessageBox.Cancel)
         error_dialog.setText("You are about to change presets, which will override any unsaved changes! Continue?")
+        error_dialog.setWindowTitle("Preset Change")
         x = error_dialog.exec_()
         if x == 16384:
             index = self.currentIndex()

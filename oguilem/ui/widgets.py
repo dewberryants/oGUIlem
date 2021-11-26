@@ -24,6 +24,7 @@ class SmartLineEdit(qW.QLineEdit):
         error_dialog = qW.QMessageBox()
         error_dialog.setStandardButtons(qW.QMessageBox.Ok)
         error_dialog.setText("Value Error! '%s' is not of type '%s'!" % (self.text(), str(self.connected_value.type)))
+        error_dialog.setWindowTitle("Error")
         error_dialog.exec()
 
 
