@@ -18,5 +18,5 @@ setup(
     url='https://github.com/dewberryants/oGUIlem',
     license=lic,
     packages=packages,
-    package_data={'': ['*.xml']}
+    package_data={'': ['*.xml', '*.ico', '*.ogo']}
 )
