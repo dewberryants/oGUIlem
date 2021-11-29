@@ -12,7 +12,7 @@
     </crossover>
     <crossover name="Mutation as Crossover" id="mutationasxover:">
         Mutates both crossing idividuals with the given mutation operator instead of crossing them.
-        <option id="mut" required="True">&lt;MUTATION&gt;</option>
+        <option id="mut" required="True" label="">&lt;MUTATION&gt;</option>
     </crossover>
     <crossover name="Sweden" id="sweden:">
         Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic
