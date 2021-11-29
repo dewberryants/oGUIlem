@@ -3,9 +3,6 @@ from setuptools import setup, find_packages
 with open('./README.md') as f:
     readme = f.read()
 
-with open('./LICENSE') as f:
-    lic = f.read()
-
 packages = find_packages()
 
 setup(
@@ -16,7 +13,6 @@ setup(
     author='Dominik Behrens',
     author_email='dewberryants@gmail.com',
     url='https://github.com/dewberryants/oGUIlem',
-    license=lic,
     packages=packages,
     package_data={'': ['*.xml', '*.ico', '*.ogo']}
 )
