@@ -7,15 +7,64 @@
         backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules). The fitness
         is the minimized value returned from this Cartesian backend.
         <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
-        <option id="maxiter=" required="False">100</option>
-        <option id="retries=" required="False">2</option>
+        <option id="absconvthresh=" required="False">1E-8</option>
+        <option id="maxiter=" required="False">2000</option>
+        <option id="lineiter=" required="False">2</option>
+        <option id="nocorrs=" required="False">7</option>
+        <option id="gtol=" required="False">0.9</option>
+        <option id="tryresets=" required="False">3</option>
     </locopt>
     <locopt name="FIRE" id="fire:">
         Built-In optimizer using only gradient information. Requires a generic
         backend that fits the problem to be optimized (e.g. the Cartesian backend for atoms/molecules). The fitness
         is the minimized value returned from this Cartesian backend.
         <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
-        <option id="maxiter=" required="False">100</option>
+        <option id="fmax=" required="False">1E-8</option>
+        <option id="maxiter=" required="False">2000</option>
+        <option id="maxmove=" required="False">0.2</option>
+        <option id="tryresets=" required="False">1</option>
+        <option id="maxtrials=" required="False">20</option>
+        <option id="resettostable=" required="False">True</option>
+        <option id="resettobestpoint=" required="False">False</option>
+        <option id="dt=" required="False">0.1</option>
+        <option id="dtmax=" required="False">1.0</option>
+        <option id="nmin=" required="False">5</option>
+        <option id="finc=" required="False">1.1</option>
+        <option id="fdec=" required="False">0.5</option>
+        <option id="astart=" required="False">0.1</option>
+        <option id="fa=" required="False">0.99</option>
+        <option id="a=" required="False">0.1</option>
+    </locopt>
+    <locopt name="Chained" id="chained:" divider="|">
+        Chain multiple local optimizers together. More optimizers can be added by appending a | and then another local
+        optimizer. The fitness evaluated is always that of the last optimizer in the chain.
+        <option id="backend1" required="True" label="">&lt;LOCAL OPTIMIZER&gt;</option>
+        <option id="backend2" required="True" label="">&lt;LOCAL OPTIMIZER&gt;</option>
+    </locopt>
+    <locopt name="Single Point" id="none:">
+        Simply perform a single point with the given generic backend.
+        <option id="backend=" required="True">&lt;GENERIC BACKEND&gt;</option>
+    </locopt>
+    <locopt name="Generic (External)" id="generic">
+        Use customized shell scripts to do local optimization. This requires the definition of two Environmental
+        variables OGO_GENERALCMD and OGO_GENERALOPTS. Ogolem will then write out a file called input.xyz containing
+        the geometric information, run OGO_GENERALCMD OGO_GENERALOPTS and expect an output.xyz ater the command exits.
+        The fitness will be the energy written in the second line of the output.xyz.
+    </locopt>
+    <locopt name="MOPAC (External)" id="mopac:">
+        Call the "mopac" program for optimization. Must be installed and found in path. For more information, refer to
+        the documentation.
+        <option id="method" required="True" label="">pm3</option>
+    </locopt>
+    <locopt name="Orca (External)" id="orca:">
+        Call the "orca" program for optimization. Must be installed and found in path. For more information, refer to
+        the documentation.
+        <option id="method" required="True" label="">b3lyp/vdzp</option>
+    </locopt>
+    <locopt name="Tinker (External)" id="tinker:">
+        Call the "tinker" program for optimization. Must be installed and found in path. For more information, refer to
+        the documentation.
+        <option id="method" required="True" label="">newton</option>
     </locopt>
     <!--
     GENERIC BACKENDS
@@ -30,5 +79,16 @@
     -->
     <calculator name="Universal Force Field (UFF)" id="universal">
         Very basic universal Force Field that automatically determines atom types.
+    </calculator>
+    <calculator name="Force Field for LJ clusters" id="lennardjones">
+        A lennard-jones only force field optimized for Lennard Jones clusters containing only one species.
+    </calculator>
+    <calculator name="Force Field for mixed LJ clusters" id="mixedlj">
+        A lennard-jones only force field optimized for Lennard Jones clusters containing multiple species.
+    </calculator>
+    <calculator name="Untangle" id="untangle:">
+        A primitive backend that nudges apart molecules based on gaussian function with width sigma*vdW-Radius. This
+        should not be used to determine the fitness. Use only in chained LocOpts!
+        <option id="sigma=" required="False">1.0</option>
     </calculator>
 </fitness>

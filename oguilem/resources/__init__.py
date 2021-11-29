@@ -87,6 +87,7 @@ class _Node:
         self.descr = ""
         self.user_defined = False
         self.label = None
+        self.divider = ","
         if "id" in node.attrib:
             self.id = node.attrib["id"]
         if "name" in node.attrib:
@@ -97,6 +98,8 @@ class _Node:
             self.required = node.attrib["required"].strip().lower() == "true"
         if "label" in node.attrib:
             self.label = node.attrib["label"]
+        if "divider" in node.attrib:
+            self.divider = node.attrib["divider"]
         if node.text:
             tmp = re.sub(r"\n\s+", " ", node.text.strip())
             self.descr = tmp

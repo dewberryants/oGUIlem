@@ -148,7 +148,6 @@ class OGUILEMGeneralConfig:
 
 
 def find_config_folder():
-    path = None
     if sys.platform == 'Windows':
         path = os.path.join(os.environ['APPDATA'], 'oguilem')
     else:

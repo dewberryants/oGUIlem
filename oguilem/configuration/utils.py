@@ -42,19 +42,23 @@ class BuildingBlockHelper:
         self.table = list()
         # Config is a dict of _Node items
         for key in config:
-            label = key if config[key].label is None else config[key.label]
+            label = key if config[key].label is None else config[key].label
             required = ""
             optional = ""
+            divider = config[key].divider
             for item in config[key].opts:
                 item_label = item.id if item.label is None else item.label
                 if item.required:
-                    descr = item.descr.replace("<", "&lt;").replace(">", "&gt;")
-                    required += item_label + "<font color=\"red\">" + descr + "</font>" + ","
+                    if "<" in item.descr and ">" in item.descr:
+                        descr = item.descr.replace("<", "&lt;").replace(">", "&gt;")
+                        required += item_label + "<font color=\"red\">" + descr + "</font>" + divider
+                    else:
+                        required += item_label + item.descr + divider
                 else:
-                    optional += item_label + item.descr + ","
-            if len(required) > 0 and required[-1] == ",":
+                    optional += item_label + item.descr + divider
+            if len(required) > 0 and required[-1] == divider:
                 required = required[:-1]
-            if len(optional) > 0 and optional[-1] == ",":
+            if len(optional) > 0 and optional[-1] == divider:
                 optional = optional[:-1]
             self.table.append((config[key].name, config[key].descr, label, required, optional))
 
