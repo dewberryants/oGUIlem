@@ -2,21 +2,80 @@
     <!--
     CROSSOVER OPERATORS
     -->
+    <crossover name="Mulitple" id="multiple:" divider="|">
+        Provide a list of crossover operators. Syntax is XX%CROSSOVER|YY%CROSSOVER|..., where XX is a number from 1-99.
+        The numbers MUST add up to 100% and represent how often the following crossover operator should statistically
+        be used. Be aware that this only be chosen ONCE, you can append as many different other operator as you wish.
+        <option id="xover1" required="True" label="50%">&lt;CROSSOVER&gt;</option>
+        <option id="xover2" required="True" label="25%">&lt;CROSSOVER&gt;</option>
+        <option id="xover3" required="True" label="25%">&lt;CROSSOVER&gt;</option>
+    </crossover>
+    <crossover name="Mutation as Crossover" id="mutationasxover:">
+        Mutates both crossing idividuals with the given mutation operator instead of crossing them.
+        <option id="mut" required="True">&lt;MUTATION&gt;</option>
+    </crossover>
     <crossover name="Sweden" id="sweden:">
         Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic
-        operation that will likely produce good results in almost all run types.
-        <option id="cutstyle=" required="False">1</option>
+        operation that will likely produce good results in almost all geometric run types. Optional cutstyle= can be 0,
+        1 or 2, which determines how the cutting plane is found. Style 0 forces it to be at z=0.0, style 1 selects it
+        from a gaussian distribution across the z axis spanning the cluster and style 2 from an even distribution. Be
+        aware that both crossing individuals are rotated randomly before the cutting plane is determined!
+        <option id="cutstyle=" required="False">2</option>
+    </crossover>
+    <crossover name="Germany" id="germany:">
+        A basic crossover operator that simply cuts the list of molecules of both individuals at the same point and then
+        exchanges the halves (no geometric information is used here). The place to cut is determined by a gaussian
+        distribution that can be controlled via gausswidth=.
+        <option id="gausswidth=" required="False">0.3</option>
+    </crossover>
+    <crossover name="Foehr" id="foehr:">
+        A basic crossover operator that exchanges only orientation information of the crossing individuals. Like in
+        the germany operator, the molecules are selected by randomly cutting through the lists.
+        <option id="noofcuts=" required="False">1</option>
+    </crossover>
+    <crossover name="Norbotten" id="norbotten:">
+        This is essentially the same operator as the Sweden operator, but the clusters are not rotated completely
+        randomly, but only in a specified plane (default XY, so the rotation is around Z)
+        <option id="cutstyle=" required="False">2</option>
+        <option id="inplane=" required="False">xy</option>
     </crossover>
     <crossover name="Portugal" id="portugal:">
-        Cut each of the parents along a plane and produce children by mixing the resulting halves. This is a very basic
-        operation that will likely produce good results in almost all run types.
-        <option id="numberofcuts=" required="False" label="">1</option>
+        This is similar to the Germany crossover operator, however it can cut the molecule list more than once.
+        <option id="noofcuts=" required="False">1</option>
+    </crossover>
+    <crossover name="No Crossover" id="nocrossover">
+        Does nothing.
     </crossover>
     <!--
     MUTATION OPERATORS
     -->
+    <mutation name="Mulitple" id="multiple:" divider="|">
+        Provide a list of mutation operators. Syntax is XX%MUTATION|YY%MUTATION|..., where XX is a number from 1-99.
+        The numbers MUST add up to 100% and represent how often the following mutation operator should statistically
+        be used. Be aware that this only be chosen ONCE, you can append as many different other operator as you wish.
+        <option id="mut1" required="True" label="50%">&lt;MUTATION&gt;</option>
+        <option id="mut2" required="True" label="25%">&lt;MUTATION&gt;</option>
+        <option id="mut3" required="True" label="25%">&lt;MUTATION&gt;</option>
+    </mutation>
     <mutation name="Monte Carlo" id="montecarlo:">
-        Randomly mutate coordinates around.
+        Randomly mutate atomic coordinates around. Acceptable options for mode= are "one", "some", "all" and
+        "gaussian" for atomic displacement, as well as "molone", "molsome", "molall" and "molgaussian" for the
+        respective molecular version that displace entire molecules at once.
         <option id="mode=" required="False">one</option>
+        <option id="maxmove=" required="False">0.2</option>
+        <option id="gaussmax=" required="False">1</option>
+        <option id="gausswidth=" required="False">1.0</option>
+    </mutation>
+    <mutation name="Norway" id="norway:">
+        Invokes a re-packing of all molecules, similar to the algorithm used for the initial pool population.
+    </mutation>
+    <mutation name="Exchange" id="xchangemut:">
+        Randomly exchanges the positions and rotations of molecules within the individual. Acceptable options for mode=
+        are "single" and "multiple".
+        <option id="mode=" required="False">single</option>
+        <option id="gausswidth=" required="False">0.4</option>
+    </mutation>
+    <mutation name="No Mutation" id="nomutation">
+        Does nothing.
     </mutation>
 </globopt>

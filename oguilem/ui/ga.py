@@ -1,5 +1,6 @@
 import re
 
+import PyQt5.QtCore as qC
 import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
@@ -13,7 +14,7 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
     def __init__(self):
         super().__init__()
         self.tabs = qW.QTabWidget()
-        self.accept_fitness = qW.QCheckBox("Acceptable Fitness")
+        self.accept_fitness = AcceptableFitnessLayout()
         self.init_ui()
 
     def init_ui(self):
@@ -36,17 +37,17 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
 
         group3 = qW.QGroupBox("General GA Settings")
         group3.setSizePolicy(qW.QSizePolicy(qW.QSizePolicy.Preferred, qW.QSizePolicy.Fixed))
+        layout2 = qW.QVBoxLayout()
+
         layout3 = qW.QGridLayout()
         layout3.addWidget(qW.QLabel("Crossover Probability"), 0, 0)
         layout3.addWidget(SmartLineEdit(conf.options.values["CrossoverPossibility"], True), 0, 1)
         layout3.addWidget(qW.QLabel("Mutation Probability"), 1, 0)
         layout3.addWidget(SmartLineEdit(conf.options.values["MutationPossibility"], True), 1, 1)
-        layout3.addWidget(self.accept_fitness, 2, 0)
-        fitness = SmartLineEdit(conf.options.values["AcceptableFitness"], True)
-        fitness.setEnabled(False)
-        self.accept_fitness.clicked.connect(lambda: fitness.setEnabled(not fitness.isEnabled()))
-        layout3.addWidget(fitness, 2, 1)
-        group3.setLayout(layout3)
+
+        layout2.addLayout(layout3)
+        layout2.addLayout(self.accept_fitness)
+        group3.setLayout(layout2)
         layout_right.addWidget(group3)
 
         columns.addLayout(layout_left)
@@ -68,6 +69,47 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
         widget = self.tabs.widget(0)
         widget.horizontalHeader().reset()
         widget.verticalHeader().reset()
+
+
+class AcceptableFitnessLayout(qW.QGridLayout):
+    def __init__(self):
+        super().__init__()
+        self.connected_value = conf.options.values["AcceptableFitness"]
+        self.connected_value.changed.connect(self.update_from_config)
+        self.connected_value.update_requested.connect(self.update_to_config)
+        self.connected_value.error.connect(self.error_box)
+        self.line_edit = qW.QLineEdit()
+        self.line_edit.setEnabled(False)
+        self.line_edit.setAlignment(qC.Qt.AlignRight)
+        self.line_edit.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Minimum)
+        self.checkbox = qW.QCheckBox("Acceptable Fitness")
+        self.checkbox.clicked.connect(lambda: self.line_edit.setEnabled(not self.line_edit.isEnabled()))
+        self.addWidget(self.checkbox, 0, 0)
+        self.addWidget(self.line_edit, 0, 1)
+        self.update_from_config()
+
+    def update_from_config(self):
+        if self.connected_value.value != conf.options.defaults["AcceptableFitness"]:
+            self.checkbox.setCheckState(qC.Qt.Checked)
+            self.line_edit.setText(str(self.connected_value))
+            self.line_edit.setEnabled(True)
+        else:
+            self.checkbox.setCheckState(qC.Qt.Unchecked)
+            self.line_edit.setText("-42.0")
+            self.line_edit.setEnabled(False)
+
+    def update_to_config(self):
+        if self.checkbox.isChecked():
+            self.connected_value.set(self.line_edit.text())
+        else:
+            self.connected_value.set(conf.options.defaults["AcceptableFitness"])
+
+    def error_box(self):
+        error_dialog = qW.QMessageBox()
+        error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+        error_dialog.setText("Value Error! '%s' is not of type '%s'!" % (self.text(), str(self.connected_value.type)))
+        error_dialog.setWindowTitle("Error")
+        error_dialog.exec()
 
 
 class ConnectedDisplay(qW.QTextEdit):
