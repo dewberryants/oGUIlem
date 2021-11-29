@@ -12,6 +12,8 @@ Requires:
 * PyQT5
 * python3-pip
 
-To install, simply clone the git repo, cd inside and do pip3 install --user
+To install, simply clone the git repo, cd inside and do
+>pip3 install --user
 
-To run the program, do python3 -m oguilem
+To run the program, do
+>python3 -m oguilem
