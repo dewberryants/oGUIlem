@@ -24,6 +24,7 @@ class OGUILEMApplication(qW.QApplication):
 class OGUILEMMainWindow(qW.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.run_dialog = OGUILEMRunDialog()
         self.init_ui()
 
     def init_ui(self):
@@ -50,6 +51,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
 
         calc_menu = self.menuBar().addMenu("Calculation")
         q_run = qW.QAction("Run...", self)
+        q_run.triggered.connect(self.run_dialog.exec_)
         calc_menu.addAction(q_run)
         q_out = qW.QAction("Stream output...", self)
         q_out.setEnabled(False)
@@ -164,3 +166,60 @@ class OGUILEMPresetBox(qW.QComboBox):
             self.reverse = True
             self.setCurrentIndex(self.last_index)
             self.reverse = False
+
+
+class OGUILEMRunDialog(qW.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Run...")
+        self.jre_edit = qW.QLineEdit()
+        if conf.ui.java_path:
+            self.jre_edit.setText(conf.ui.java_path)
+        self.ogo_edit = qW.QLineEdit()
+        if conf.ui.ogo_path:
+            self.jre_edit.setText(conf.ui.ogo_path)
+        self.vm_args = qW.QLineEdit()
+        if conf.ui.java_vm_variables:
+            self.vm_args.setText(conf.ui.java_vm_variables)
+        self.run_args = qW.QLineEdit()
+        if conf.ui.ogo_args:
+            self.vm_args.setText(conf.ui.ogo_args)
+
+        jre_btn = qW.QPushButton("...")
+        jre_btn.setStyleSheet("min-width: 20px; max-width:40px")
+        jre_btn.clicked.connect(self.get_jre_path)
+
+        ogo_btn = qW.QPushButton("...")
+        ogo_btn.setStyleSheet("min-width: 20px; max-width:40px")
+        ogo_btn.clicked.connect(self.get_ogo_path)
+
+        layout = qW.QGridLayout()
+        layout.addWidget(qW.QLabel("Java Runtime"), 0, 0)
+        layout_jre = qW.QHBoxLayout()
+        layout_jre.addWidget(self.jre_edit)
+        layout_jre.addWidget(jre_btn)
+        layout.addLayout(layout_jre, 0, 1)
+
+        layout.addWidget(qW.QLabel("OGOLEM JAR"), 1, 0)
+        layout_ogo = qW.QHBoxLayout()
+        layout_ogo.addWidget(self.ogo_edit)
+        layout_ogo.addWidget(ogo_btn)
+        layout.addLayout(layout_ogo, 1, 1)
+
+        layout.addWidget(qW.QLabel("Java VM Options"), 2, 0)
+        layout.addWidget(self.vm_args, 2, 1)
+
+        layout.addWidget(qW.QLabel("Run Options"), 3, 0)
+        layout.addWidget(self.run_args, 3, 1)
+
+        self.setLayout(layout)
+
+    def get_jre_path(self):
+        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Choose java runtime binary", "")
+        if file_name:
+            self.jre_edit.setText(file_name)
+
+    def get_ogo_path(self):
+        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Ogolem Runtime", "", "JAR (*.jar)")
+        if file_name:
+            self.ogo_edit.setText(file_name)

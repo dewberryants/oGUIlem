@@ -163,6 +163,8 @@ class OGUILEMUIConfig:
         self.window_position = None
         self.java_path = None
         self.java_vm_variables = None
+        self.ogo_path = None
+        self.ogo_args = None
         self.environmental_variables = None
         try:
             self.recover_from_file()
@@ -185,6 +187,10 @@ class OGUILEMUIConfig:
                 self.java_path = work[8:].strip()
             elif work.startswith("JAVAVM"):
                 self.java_vm_variables = work[7:].strip()
+            elif work.startswith("OGOPATH"):
+                self.ogo_path = work[7:].strip()
+            elif work.startswith("OGOARGS"):
+                self.ogo_args = work[7:].strip()
             elif work.startswith("ENV"):
                 self.environmental_variables = work[3:].strip()
 
@@ -199,5 +205,9 @@ class OGUILEMUIConfig:
                 config.write("JAVAPATH %s\n" % self.java_path)
             if self.java_vm_variables:
                 config.write("JAVAVM %s\n" % self.java_vm_variables)
+            if self.ogo_path:
+                config.write("OGOPATH %s\n" % self.ogo_path)
+            if self.ogo_args:
+                config.write("OGOARGS %s\n" % self.ogo_args)
             if self.java_path:
                 config.write("ENV %s\n" % self.environmental_variables)
