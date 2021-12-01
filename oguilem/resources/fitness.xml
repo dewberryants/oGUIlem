@@ -51,6 +51,14 @@
         the geometric information, run OGO_GENERALCMD OGO_GENERALOPTS and expect an output.xyz ater the command exits.
         The fitness will be the energy written in the second line of the output.xyz.
     </locopt>
+    <locopt name="xTB (External)" id="xtb:">
+        Call the "xtb" program for optimization. Must be installed and found in path. For more information, refer to
+        the documentation.
+        <option id="method=" required="True">gfn2-xtb</option>
+        <option id="optlevel=" required="False">normal</option>
+        <option id="keepdirs=" required="False">normal</option>
+        <option id="xcontrol=" required="False">xtb.input</option>
+    </locopt>
     <locopt name="MOPAC (External)" id="mopac:">
         Call the "mopac" program for optimization. Must be installed and found in path. For more information, refer to
         the documentation.

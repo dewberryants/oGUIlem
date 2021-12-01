@@ -130,8 +130,8 @@ class ConnectedDisplay(qW.QTextEdit):
     def update_to_config(self):
         text = self.document().toPlainText()
         if "\n" in text:
-            conf.fitness.current.error.emit()
-        conf.fitness.current.set(text)
+            self.value.error.emit()
+        self.value.set(text)
 
     def error_box(self):
         error_dialog = qW.QMessageBox()

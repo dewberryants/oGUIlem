@@ -1,10 +1,5 @@
 ###OGOLEM###
-GlobOptAlgo=cluster{xover(sweden:)mutation(montecarlo:)}
-LocOptAlgo=chained:lbfgs:backend=xyz:untangle:sigma=1.2|xtb:
-PoolSize=64
-NumberOfGlobIterations=10000
-ThreshLocOptGradient=1E-5
-PreSanityCD=false
+GlobOptAlgo=cluster{xover(sweden:)mutation(montecarlo:mode=some)}
 <GEOMETRY>
     NumberOfParticles=12
     <MOLECULE>
@@ -14,3 +9,10 @@ PreSanityCD=false
         H;0.0;1.0;0.0
     </MOLECULE>
 </GEOMETRY>
+LocOptAlgo=chained:lbfgs:backend=xyz:untangle:sigma=1.2|xtb:method=gfn2-xtb
+PoolSize=64
+NumberOfGlobIterations=1000
+MutationPossibility=0.2
+PreSanityCD=False
+GeneticRecordsToSerial=10000
+GeometriesToSerial=500
