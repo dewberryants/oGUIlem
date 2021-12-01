@@ -1,6 +1,8 @@
 import PyQt5.QtCore as qC
 import PyQt5.QtWidgets as qW
 
+from oguilem.configuration import conf
+
 
 class SmartLineEdit(qW.QLineEdit):
     def __init__(self, connected_value, minimum_size=False):
@@ -10,6 +12,7 @@ class SmartLineEdit(qW.QLineEdit):
         self.connected_value.changed.connect(self.update_from_config)
         self.connected_value.update_requested.connect(self.update_to_config)
         self.connected_value.error.connect(self.error_box)
+        self.textEdited.connect(conf.file_manager.signal_modification)
         self.update_from_config()
         if minimum_size:
             self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Minimum)
@@ -59,6 +62,7 @@ class SmartCheckBox(qW.QCheckBox):
         self.connected_value = connected_value
         self.connected_value.changed.connect(self.update_from_config)
         self.connected_value.update_requested.connect(self.update_to_config)
+        self.clicked.connect(conf.file_manager.signal_modification)
         self.update_from_config()
 
     def update_from_config(self):
@@ -72,6 +76,31 @@ class SmartCheckBox(qW.QCheckBox):
             self.connected_value.set(True)
         else:
             self.connected_value.set(False)
+
+
+class SmartSlider(qW.QSlider):
+    def __init__(self, connected_value, ticks=3):
+        super().__init__(qC.Qt.Horizontal)
+        self.setTickInterval(1)
+        self.setMinimum(0)
+        self.setMaximum(ticks - 1)
+        self.setTickPosition(qW.QSlider.TicksBelow)
+        self.connected_value = connected_value
+        self.connected_value.changed.connect(self.update_from_config)
+        self.connected_value.update_requested.connect(self.update_to_config)
+        self.sliderMoved.connect(conf.file_manager.signal_modification)
+        self.update_from_config()
+
+    def update_from_config(self):
+        if self.connected_value.value >= self.maximum():
+            self.setSliderPosition(self.maximum())
+        elif self.connected_value.value <= 0:
+            self.setSliderPosition(self.minimum())
+        else:
+            self.setSliderPosition(self.connected_value.value)
+
+    def update_to_config(self):
+        self.connected_value.set(self.sliderPosition())
 
 
 class InactiveDelegate(qW.QStyledItemDelegate):

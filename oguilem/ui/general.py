@@ -160,7 +160,7 @@ class OGUILEMPresetBox(qW.QComboBox):
         x = error_dialog.exec_()
         if x == 16384:
             index = self.currentIndex()
-            conf.load_from_file(presets[index][2])
+            conf.load_from_file(presets[index][2], preset=True)
             self.last_index = index
         else:
             self.reverse = True

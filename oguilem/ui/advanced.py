@@ -1,8 +1,7 @@
-import PyQt5.QtCore as qC
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
-from oguilem.ui.widgets import SmartCheckBox, SmartLineEdit
+from oguilem.ui.widgets import SmartCheckBox, SmartLineEdit, SmartSlider
 
 
 class OGUILEMAdvancedTab(qW.QWidget):
@@ -31,11 +30,7 @@ class OGUILEMAdvancedTab(qW.QWidget):
         runtype_layout = qW.QGridLayout()
 
         runtype_layout.addWidget(qW.QLabel("Debug Level"), 0, 0)
-        debug_slider = qW.QSlider(qC.Qt.Horizontal)
-        debug_slider.setTickInterval(1)
-        debug_slider.setMinimum(0)
-        debug_slider.setMaximum(2)
-        debug_slider.setTickPosition(qW.QSlider.TicksBelow)
+        debug_slider = SmartSlider(conf.options.values["DebugLevel"])
         runtype_layout.addWidget(debug_slider, 0, 1)
         runtype_layout.addWidget(SmartCheckBox("Silent Mode", conf.options.values["SilentMode"]), 1, 0)
         runtype_layout.addWidget(qW.QLabel("Genetic Record Buffer Size"), 2, 0)

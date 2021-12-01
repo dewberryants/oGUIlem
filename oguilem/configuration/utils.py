@@ -2,6 +2,23 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
+class ConfigFileManager(QObject):
+    config_modified = pyqtSignal(str)
+
+    def __init__(self):
+        super().__init__()
+        self.current_filename = ""
+        self.unsaved_changes = True
+
+    def signal_modification(self):
+        self.unsaved_changes = True
+        self.config_modified.emit("")
+
+    def signal_saved(self, file_name: str):
+        self.unsaved_changes = False
+        self.config_modified.emit(file_name)
+
+
 class ConnectedValue(QObject):
     changed = pyqtSignal()
     update_requested = pyqtSignal()

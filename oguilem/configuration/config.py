@@ -5,7 +5,7 @@ import sys
 from oguilem.configuration.fitness import OGUILEMFitnessFunctionConfiguration
 from oguilem.configuration.ga import OGUILEMGlobOptConfig
 from oguilem.configuration.geometry import OGUILEMGeometryConfig
-from oguilem.configuration.utils import ConnectedValue
+from oguilem.configuration.utils import ConnectedValue, ConfigFileManager
 from oguilem.resources import options
 
 
@@ -16,19 +16,21 @@ class OGUILEMConfig:
         self.options = OGUILEMGeneralConfig()
         self.geometry = OGUILEMGeometryConfig()
         self.fitness = OGUILEMFitnessFunctionConfiguration()
+        self.file_manager = ConfigFileManager()
 
-    def save_to_file(self, fname):
+    def save_to_file(self, path: str):
         content = "###OGOLEM###\n"
         content += self.globopt.get_finished_config()
         content += self.geometry.get_finished_config()
         content += self.fitness.get_finished_config()
         content += self.options.get_finished_config()
-        with open(fname, "w") as ofile:
-            ofile.write(content)
+        with open(path, "w") as conf_file:
+            conf_file.write(content)
+        self.file_manager.signal_saved(path)
 
-    def load_from_file(self, file):
+    def load_from_file(self, path: str, preset=False):
         self.options.set_to_default()
-        with open(file, "r") as conf_file:
+        with open(path, "r") as conf_file:
             content = conf_file.readlines()
             # Find geometry block and split off
             iter_content = iter(content)
@@ -92,6 +94,10 @@ class OGUILEMConfig:
                             else:
                                 print("ERROR: Could not set Option %s. Set to default instead!" % key)
                                 self.options.values[key].set(self.options.defaults[key])
+        if not preset:
+            self.file_manager.signal_saved(path)
+        else:
+            self.file_manager.signal_modification()
 
 
 def parse_value(line, type):
