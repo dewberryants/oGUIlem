@@ -52,7 +52,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
 
         calc_menu = self.menuBar().addMenu("Calculation")
         q_run = qW.QAction("Run...", self)
-        q_run.triggered.connect(self.run_dialog.exec_)
+        q_run.triggered.connect(self.open_run_dialog)
         calc_menu.addAction(q_run)
         q_out = qW.QAction("Stream output...", self)
         q_out.setEnabled(False)
@@ -64,6 +64,16 @@ class OGUILEMMainWindow(qW.QMainWindow):
         self.setCentralWidget(OGUILEMCentralWidget())
         self.setWindowTitle("oGUIlem")
         self.setWindowIcon(qG.QIcon(icon))
+
+    def open_run_dialog(self):
+        if conf.file_manager.unsaved_changes:
+            error_dialog = qW.QMessageBox()
+            error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+            error_dialog.setText("Unsaved Changes! Please save to file before running!")
+            error_dialog.setWindowTitle("Unsaved Changes")
+            error_dialog.exec_()
+        else:
+            self.run_dialog.exec_()
 
     def update_window_title(self, file_name):
         if file_name:
@@ -156,7 +166,7 @@ class OGUILEMPresetBox(qW.QComboBox):
             return
         if self.last_index == -1:
             index = self.currentIndex()
-            conf.load_from_file(presets[index][2])
+            conf.load_from_file(presets[index][2], preset=True)
             self.last_index = index
             return
         error_dialog = qW.QMessageBox()
