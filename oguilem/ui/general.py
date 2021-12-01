@@ -26,6 +26,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
         super().__init__()
         self.run_dialog = OGUILEMRunDialog()
         self.init_ui()
+        conf.file_manager.config_modified.connect(self.update_window_title)
 
     def init_ui(self):
         if not conf.ui.window_position:
@@ -63,6 +64,12 @@ class OGUILEMMainWindow(qW.QMainWindow):
         self.setCentralWidget(OGUILEMCentralWidget())
         self.setWindowTitle("oGUIlem")
         self.setWindowIcon(qG.QIcon(icon))
+
+    def update_window_title(self, file_name):
+        if file_name:
+            self.setWindowTitle("oGUIlem - " + file_name)
+        elif self.windowTitle().strip()[-2:] != " *":
+            self.setWindowTitle(self.windowTitle().strip() + " *")
 
     def open_file_dialog(self):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
