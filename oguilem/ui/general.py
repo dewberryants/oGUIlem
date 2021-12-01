@@ -1,3 +1,5 @@
+import traceback
+
 import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
@@ -84,7 +86,15 @@ class OGUILEMMainWindow(qW.QMainWindow):
     def open_file_dialog(self):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
         if file_name:
-            conf.load_from_file(file_name)
+            try:
+                conf.load_from_file(file_name)
+            except IOError:
+                error_dialog = qW.QMessageBox()
+                error_dialog.setStandardButtons(qW.QMessageBox.Ok)
+                error_dialog.setText("Could not successfully parse the input file! \n\n"
+                                     + traceback.format_exc())
+                error_dialog.setWindowTitle("Error")
+                error_dialog.exec_()
 
     def save_file_dialog(self):
         file_name, _ = qW.QFileDialog.getSaveFileName(self, "Save Config...", "", "OGOLEM Config Files (*.ogo)")
@@ -194,13 +204,13 @@ class OGUILEMRunDialog(qW.QDialog):
             self.jre_edit.setText(conf.ui.java_path)
         self.ogo_edit = qW.QLineEdit()
         if conf.ui.ogo_path:
-            self.jre_edit.setText(conf.ui.ogo_path)
+            self.ogo_edit.setText(conf.ui.ogo_path)
         self.vm_args = qW.QLineEdit()
         if conf.ui.java_vm_variables:
             self.vm_args.setText(conf.ui.java_vm_variables)
         self.run_args = qW.QLineEdit()
         if conf.ui.ogo_args:
-            self.vm_args.setText(conf.ui.ogo_args)
+            self.run_args.setText(conf.ui.ogo_args)
 
         jre_btn = qW.QPushButton("...")
         jre_btn.setStyleSheet("min-width: 20px; max-width:40px")
@@ -240,3 +250,17 @@ class OGUILEMRunDialog(qW.QDialog):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Ogolem Runtime", "", "JAR (*.jar)")
         if file_name:
             self.ogo_edit.setText(file_name)
+
+    def update_options(self):
+        conf.ui.java_path = self.jre_edit.text().strip()
+        conf.ui.java_vm_variables = self.vm_args.text().strip()
+        conf.ui.ogo_path = self.ogo_edit.text().strip()
+        conf.ui.ogo_args = self.run_args.text().strip()
+
+    def accept(self) -> None:
+        self.update_options()
+        super().accept()
+
+    def reject(self) -> None:
+        self.update_options()
+        super().reject()
