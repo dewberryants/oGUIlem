@@ -50,11 +50,17 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout_g2_header.addWidget(self.accept_btn, 0, 1)
         layout_g2.addLayout(layout_g2_header)
         layout_g2.addWidget(self.mol_content_display)
-        layout_g2.addWidget(qW.QLabel("Molecule Charges"))
+        charge_label = qW.QLabel("Molecule Charges")
+        charge_label.setEnabled(False)
+        layout_g2.addWidget(charge_label)
         charge_table = qW.QTableWidget()
+        charge_table.setEnabled(False)
         layout_g2.addWidget(charge_table)
-        layout_g2.addWidget(qW.QLabel("Molecule Spins"))
+        spin_label = qW.QLabel("Molecule Spins")
+        spin_label.setEnabled(False)
+        layout_g2.addWidget(spin_label)
         spin_table = qW.QTableWidget()
+        spin_table.setEnabled(False)
         layout_g2.addWidget(spin_table)
         group2.setLayout(layout_g2)
         layout.addWidget(group2)
@@ -69,6 +75,7 @@ class OGUILEMGeometryTab(qW.QWidget):
         ret = popup.exec()
         if ret == 1:
             conf.geometry += popup.mol
+            conf.file_manager.signal_modification()
 
     def update_current_molecule(self):
         new_content = self.mol_content_display.document().toPlainText().split("\n")
@@ -110,6 +117,7 @@ class GeometryMoleculeList(qW.QListView):
             try:
                 selected = self.selectionModel().selection().indexes()[0].row()
                 conf.geometry.update_mol(selected, content)
+                conf.file_manager.signal_modification()
             except IndexError:
                 print("No valid selection!")
 
@@ -118,6 +126,7 @@ class GeometryMoleculeList(qW.QListView):
             try:
                 selected = self.selectionModel().selection().indexes()[0].row()
                 conf.geometry.pop(selected)
+                conf.file_manager.signal_modification()
             except IndexError:
                 print("No valid selection!")
 

@@ -45,6 +45,7 @@ class FitnessDisplay(qW.QTextEdit):
         conf.fitness.current.changed.connect(self.update_from_config)
         conf.fitness.current.update_requested.connect(self.update_to_config)
         conf.fitness.current.error.connect(self.error_box)
+        self.document().contentsChanged.connect(conf.file_manager.signal_modification)
         self.setLineWrapMode(qW.QTextEdit.NoWrap)
         self.setMaximumHeight(2 * self.fontMetrics().height() + self.fontMetrics().lineSpacing())
         self.setSizePolicy(qW.QSizePolicy.Minimum, qW.QSizePolicy.Preferred)

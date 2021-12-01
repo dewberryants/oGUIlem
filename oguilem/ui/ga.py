@@ -119,6 +119,7 @@ class ConnectedDisplay(qW.QTextEdit):
         self.value.changed.connect(self.update_from_config)
         self.value.update_requested.connect(self.update_to_config)
         self.value.error.connect(self.error_box)
+        self.document().contentsChanged.connect(conf.file_manager.signal_modification)
         self.setPlaceholderText(placeholder_text)
         self.setLineWrapMode(qW.QTextEdit.NoWrap)
         self.setMaximumHeight(2 * self.fontMetrics().height() + self.fontMetrics().lineSpacing())
