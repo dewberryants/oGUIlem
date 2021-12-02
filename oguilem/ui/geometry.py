@@ -12,6 +12,7 @@ class OGUILEMGeometryTab(qW.QWidget):
     def __init__(self):
         super().__init__()
         layout = qW.QHBoxLayout()
+        self.inspector_group = qW.QGroupBox("Selected Molecule")
         self.entity_display = qW.QLineEdit()
         self.entity_display.setReadOnly(True)
         self.entity_display.setStyleSheet("min-width: 40px; max-width:40px")
@@ -45,7 +46,8 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout_g1.addWidget(self.mol_list)
         group1.setLayout(layout_g1)
         layout.addWidget(group1)
-        group2 = qW.QGroupBox("Selected Molecule")
+        group2 = self.inspector_group
+        group2.setEnabled(False)
         layout_g2_header = qW.QGridLayout()
         layout_g2 = qW.QVBoxLayout()
         layout_g2_header.addWidget(qW.QLabel("Molecule Info"), 0, 0)
@@ -88,6 +90,7 @@ class GeometryMoleculeList(qW.QListView):
         self.accept_btn = parent.accept_btn
         self.setModel(qG.QStandardItemModel())
         self.selectionModel().selectionChanged.connect(self.handle_selection)
+        self.group = parent.inspector_group
         conf.geometry.changed.connect(self.update_list_from_config)
 
     def update_list_from_config(self):
@@ -103,9 +106,11 @@ class GeometryMoleculeList(qW.QListView):
         try:
             selected_row = selection.indexes()[0].row()
             self.selection_changed.emit(conf.geometry.molecules[selected_row])
+            self.group.setEnabled(True)
         except IndexError:
             # Happens when something was deleted or added
             self.selection_changed.emit(self.none_molecule)
+            self.group.setEnabled(False)
         self.accept_btn.setEnabled(False)
 
     def mod_mol(self, content, charges, spins):
