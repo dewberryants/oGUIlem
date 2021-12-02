@@ -36,11 +36,13 @@ class OGUILEMGeometryConfig(QObject):
                 num += 1
         return num
 
-    def update_mol(self, index, new_content: list):
+    def update_mol(self, index, new_content: list, charges: dict, spins: dict):
         assert (type(new_content) == list)
         while "" in new_content:
             new_content.pop(new_content.index(""))
         self.molecules[index].content = new_content
+        self.molecules[index].charges = charges
+        self.molecules[index].spins = spins
         self.changed.emit()
 
     def pop(self, index):

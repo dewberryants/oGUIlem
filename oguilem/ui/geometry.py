@@ -23,6 +23,8 @@ class OGUILEMGeometryTab(qW.QWidget):
         self.mol_list = GeometryMoleculeList(self)
         self.mol_content_display = MoleculeInspectorEdit(self.mol_list)
         self.mol_content_display.textChanged.connect(lambda: self.accept_btn.setEnabled(True))
+        self.mol_charge_display = MoleculeChargeEdit(self.mol_list)
+        self.mol_spin_display = MoleculeSpinEdit(self.mol_list)
 
         group1 = qW.QGroupBox("Molecules")
         layout_g1 = qW.QVBoxLayout()
@@ -51,17 +53,11 @@ class OGUILEMGeometryTab(qW.QWidget):
         layout_g2.addLayout(layout_g2_header)
         layout_g2.addWidget(self.mol_content_display)
         charge_label = qW.QLabel("Molecule Charges")
-        charge_label.setEnabled(False)
         layout_g2.addWidget(charge_label)
-        charge_table = qW.QTableWidget()
-        charge_table.setEnabled(False)
-        layout_g2.addWidget(charge_table)
+        layout_g2.addWidget(self.mol_charge_display)
         spin_label = qW.QLabel("Molecule Spins")
-        spin_label.setEnabled(False)
         layout_g2.addWidget(spin_label)
-        spin_table = qW.QTableWidget()
-        spin_table.setEnabled(False)
-        layout_g2.addWidget(spin_table)
+        layout_g2.addWidget(self.mol_spin_display)
         group2.setLayout(layout_g2)
         layout.addWidget(group2)
 
@@ -79,7 +75,7 @@ class OGUILEMGeometryTab(qW.QWidget):
 
     def update_current_molecule(self):
         new_content = self.mol_content_display.document().toPlainText().split("\n")
-        self.mol_list.mod_mol(new_content)
+        self.mol_list.mod_mol(new_content, self.mol_charge_display.get_charges(), self.mol_spin_display.get_spins())
         self.accept_btn.setEnabled(False)
 
 
@@ -112,11 +108,11 @@ class GeometryMoleculeList(qW.QListView):
             self.selection_changed.emit(self.none_molecule)
         self.accept_btn.setEnabled(False)
 
-    def mod_mol(self, content):
+    def mod_mol(self, content, charges, spins):
         if self.model().rowCount() > 0:
             try:
                 selected = self.selectionModel().selection().indexes()[0].row()
-                conf.geometry.update_mol(selected, content)
+                conf.geometry.update_mol(selected, content, charges, spins)
                 conf.file_manager.signal_modification()
             except IndexError:
                 print("No valid selection!")
@@ -140,6 +136,101 @@ class MoleculeInspectorEdit(qW.QTextEdit):
         if incoming is GeometryMoleculeList.none_molecule:
             self.setText("")
         self.setText(str(incoming))
+
+
+class MoleculeChargeEdit(qW.QTableView):
+    def __init__(self, parent: GeometryMoleculeList):
+        super().__init__(parent=parent)
+        model = qG.QStandardItemModel()
+        model.setHorizontalHeaderItem(0, qG.QStandardItem("Atom Index"))
+        model.setHorizontalHeaderItem(1, qG.QStandardItem("Charge"))
+        self.setModel(model)
+        self.setCornerButtonEnabled(False)
+        self.setSelectionMode(qW.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(qW.QAbstractItemView.SelectItems)
+        self.horizontalHeader().setSectionResizeMode(qW.QHeaderView.Stretch)
+        self.verticalHeader().setSectionResizeMode(qW.QHeaderView.ResizeToContents)
+        self.verticalHeader().hide()
+        self.parent().selection_changed.connect(self.update_content)
+        self.setItemDelegate(MoleculeChargeAndSpinTableDelegate())
+        self.itemDelegate().commitData.connect(lambda: parent.accept_btn.setEnabled(True))
+
+    def get_charges(self):
+        charges = dict()
+        for row in range(self.model().rowCount() - 1):
+            c0 = self.model().data(self.model().index(row, 0), qC.Qt.DisplayRole)
+            c1 = self.model().data(self.model().index(row, 1), qC.Qt.DisplayRole)
+            if c0 and c1:
+                try:
+                    int(c0)
+                    charges[c0] = float(c1)
+                except ValueError:
+                    print("Charge entries are nonsense. Must be numbers!")
+        return charges
+
+    def update_content(self, incoming):
+        if self.model().rowCount() > 0:
+            self.model().removeRows(0, self.model().rowCount())
+        if incoming is not GeometryMoleculeList.none_molecule:
+            for index in incoming.charges:
+                self.model().appendRow([qG.QStandardItem(index), qG.QStandardItem(str(incoming.charges[index]))])
+            self.model().appendRow([qG.QStandardItem(), qG.QStandardItem()])
+
+
+class MoleculeSpinEdit(qW.QTableView):
+    def __init__(self, parent: GeometryMoleculeList):
+        super().__init__(parent=parent)
+        model = qG.QStandardItemModel()
+        model.setHorizontalHeaderItem(0, qG.QStandardItem("Atom Index"))
+        model.setHorizontalHeaderItem(1, qG.QStandardItem("Spin"))
+        self.setModel(model)
+        self.setCornerButtonEnabled(False)
+        self.setSelectionMode(qW.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(qW.QAbstractItemView.SelectItems)
+        self.horizontalHeader().setSectionResizeMode(qW.QHeaderView.Stretch)
+        self.verticalHeader().setSectionResizeMode(qW.QHeaderView.ResizeToContents)
+        self.verticalHeader().hide()
+        self.parent().selection_changed.connect(self.update_content)
+        self.setItemDelegate(MoleculeChargeAndSpinTableDelegate())
+        self.itemDelegate().commitData.connect(lambda: parent.accept_btn.setEnabled(True))
+
+    def get_spins(self):
+        spins = dict()
+        for row in range(self.model().rowCount() - 1):
+            c0 = self.model().data(self.model().index(row, 0), qC.Qt.DisplayRole)
+            c1 = self.model().data(self.model().index(row, 1), qC.Qt.DisplayRole)
+            if c0 and c1:
+                try:
+                    int(c0)
+                    spins[c0] = int(c1)
+                except ValueError:
+                    print("Spin entries are nonsense. Must be numbers!")
+        return spins
+
+    def update_content(self, incoming):
+        if self.model().rowCount() > 0:
+            self.model().removeRows(0, self.model().rowCount())
+        if incoming is not GeometryMoleculeList.none_molecule:
+            for index in incoming.spins:
+                self.model().appendRow([qG.QStandardItem(index), qG.QStandardItem(str(incoming.spins[index]))])
+            self.model().appendRow([qG.QStandardItem(), qG.QStandardItem()])
+
+
+class MoleculeChargeAndSpinTableDelegate(qW.QStyledItemDelegate):
+    def __init__(self):
+        super().__init__()
+
+    def setModelData(self, editor: qW.QWidget, model: qC.QAbstractItemModel, index: qC.QModelIndex) -> None:
+        super().setModelData(editor, model, index)
+        # The Table is very simple and only has column 0 and 1, so if both hold values, add a new row of empty
+        # items, or if both are now empty, remove them, unless they're the last ones.
+        row = index.row()
+        c0 = model.data(model.index(row, 0), qC.Qt.DisplayRole)
+        c1 = model.data(model.index(row, 1), qC.Qt.DisplayRole)
+        if c0 and c1:
+            model.appendRow([qG.QStandardItem(), qG.QStandardItem()])
+        elif not c0 and not c1 and model.rowCount() > 1:
+            model.removeRow(row)
 
 
 class OGUILEMAddMolDialog(qW.QDialog):
