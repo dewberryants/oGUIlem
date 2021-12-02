@@ -59,8 +59,10 @@ class OGUILEMGeneticAlgoTab(qW.QWidget):
         layout.addWidget(qW.QLabel("Library of Operators"))
         layout.addWidget(checkbox)
         mutations, crossovers = globopt
-        self.tabs.addTab(BlockProvider(crossover_display, crossovers, checkbox, "Crossover", "CROSSOVER"), "Crossovers")
-        self.tabs.addTab(BlockProvider(mutation_display, mutations, checkbox, "Mutation", "MUTATION"), "Mutations")
+        self.tabs.addTab(BlockProvider(crossover_display, crossovers, checkbox, "Crossover", "CROSSOVER",
+                                       mutation_display), "Crossovers")
+        self.tabs.addTab(BlockProvider(mutation_display, mutations, checkbox, "Mutation", "MUTATION",
+                                       crossover_display), "Mutations")
         layout.addWidget(self.tabs)
 
         self.setLayout(layout)
@@ -142,7 +144,8 @@ class ConnectedDisplay(qW.QTextEdit):
 
 
 class BlockProvider(qW.QTableView):
-    def __init__(self, line_edit: qW.QTextEdit, config, checkbox: qW.QCheckBox, column_header="0", help_tag="0"):
+    def __init__(self, line_edit: qW.QTextEdit, config, checkbox: qW.QCheckBox, column_header="0", help_tag="0",
+                 line_edit2=None):
         super().__init__()
         self.config = BuildingBlockHelper(config)
         self.checkbox = checkbox
@@ -152,6 +155,7 @@ class BlockProvider(qW.QTableView):
         self.setSelectionBehavior(qW.QAbstractItemView.SelectRows)
         self.setItemDelegate(InactiveDelegate())
         self.line_edit: qW.QTextEdit = line_edit
+        self.line_edit2 = line_edit2
         self.column_header = column_header
         self.help_tag = help_tag
         self.init_model()
@@ -176,6 +180,7 @@ class BlockProvider(qW.QTableView):
         index = self.selectedIndexes()[0].row()
         if len(self.line_edit.document().toPlainText()) > 0:
             text = self.line_edit.document().toHtml()
+            text2 = "" if not self.line_edit2 else self.line_edit2.document().toHtml()
             error_dialog = qW.QMessageBox()
             error_dialog.setStandardButtons(qW.QMessageBox.Yes | qW.QMessageBox.Cancel)
             error_dialog.setDefaultButton(qW.QMessageBox.Cancel)
@@ -183,7 +188,9 @@ class BlockProvider(qW.QTableView):
             x = None
             # Check the corresponding tags and replace (seems a little smarter)
             pattern = r'<span style=" color:#ff0000;">&lt;' + self.help_tag + '&gt;</span>'
-            if not re.search(pattern, text):
+            match1 = re.search(pattern, text)
+            match2 = re.search(pattern, text2)
+            if not match1 and not match2:
                 x = error_dialog.exec_()
             if x is not None:
                 # No fitting tag was found, so we either append or do nothing.
@@ -192,8 +199,13 @@ class BlockProvider(qW.QTableView):
                 else:
                     return
             else:
-                # A fitting tag was found. Replace and we're happy.
-                text = re.sub(pattern, self.config.get(index, self.checkbox.isChecked()), text, 1)
+                if match1:
+                    # A fitting tag was found. Replace and we're happy.
+                    text = re.sub(pattern, self.config.get(index, self.checkbox.isChecked()), text, 1)
+                    self.line_edit.setText(text)
+                elif match2:
+                    text2 = re.sub(pattern, self.config.get(index, self.checkbox.isChecked()), text2, 1)
+                    self.line_edit2.setText(text2)
         else:
             text = self.config.get(index, self.checkbox.isChecked())
-        self.line_edit.setText(text)
+            self.line_edit.setText(text)

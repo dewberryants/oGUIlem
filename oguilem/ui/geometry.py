@@ -163,7 +163,6 @@ class OGUILEMAddMolDialog(qW.QDialog):
 
         file_layout = qW.QHBoxLayout()
         self.file_line = qW.QLineEdit()
-        self.file_line.setAlignment(qC.Qt.AlignRight)
         self.file_line.setEnabled(False)
         self.file_line.textChanged.connect(lambda: self.file_line.setStyleSheet(""))
         file_layout.addWidget(self.file_line)
@@ -173,7 +172,19 @@ class OGUILEMAddMolDialog(qW.QDialog):
         self.btn.clicked.connect(self.get_path)
         file_layout.addWidget(self.btn)
 
+        bonds_layout = qW.QHBoxLayout()
+        grid.addWidget(qW.QLabel("Bond List"), 2, 0)
+        self.bonds_line = qW.QLineEdit()
+        self.bonds_line.setPlaceholderText("Auto determine")
+        self.bonds_line.textChanged.connect(lambda: self.bonds_line.setStyleSheet(""))
+        bonds_layout.addWidget(self.bonds_line)
+        self.btn2 = qW.QPushButton("...")
+        self.btn2.setStyleSheet("min-width: 20px; max-width:40px")
+        self.btn2.clicked.connect(self.get_path_bonds)
+        bonds_layout.addWidget(self.btn2)
+
         grid.addLayout(file_layout, 1, 1)
+        grid.addLayout(bonds_layout, 2, 1)
 
         layout.addLayout(grid)
 
@@ -207,12 +218,20 @@ class OGUILEMAddMolDialog(qW.QDialog):
         self.mol.content = list()
         if reps > 1:
             self.mol.content.append("MoleculeRepetitions=%d" % reps)
+        if self.bonds_line.text():
+            path = self.bonds_line.text()
+            if os.path.isfile(path):
+                self.mol.content.append("BondMatrix=%s" % self.bonds_line.text())
+            else:
+                print("Invalid Path for Bond List!")
+                self.bonds_line.setStyleSheet("color: red")
+                return
         if self.cbox.isChecked():
             path = self.file_line.text()
             if os.path.isfile(path):
                 self.mol.content.append("MoleculePath=%s" % path)
             else:
-                print("Invalid Path!")
+                print("Invalid Path for xyz File!")
                 self.file_line.setStyleSheet("color: red")
                 return
         else:
@@ -224,6 +243,11 @@ class OGUILEMAddMolDialog(qW.QDialog):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Molecule File...", "", "XYZ (*.xyz)")
         if file_name:
             self.file_line.setText(file_name)
+
+    def get_path_bonds(self):
+        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Bond List...", "", "LIST (*.list)")
+        if file_name:
+            self.bonds_line.setText(file_name)
 
     def cbox_clicked(self, checked):
         self.btn.setEnabled(checked)
