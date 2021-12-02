@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Dict
 
 from PyQt5.QtCore import pyqtSignal, QObject
 
@@ -71,6 +71,48 @@ class OGUILEMGeometryConfig(QObject):
                 self.molecules += [OGUILEMMolecule(["    ".join(line.strip().split(";")) for line in mol_block])]
         self.changed.emit()
 
+    def parse_charge_block(self, charge_block: List[str]):
+        for line in charge_block:
+            tmp = line.strip()
+            try:
+                work = tmp.split(";")
+                index = int(work[0])
+                self.molecules[index].charges[work[1]] = float(work[2])
+            except IndexError:
+                raise RuntimeError("Unknown Atom Index in Charge Block!")
+            except ValueError:
+                raise RuntimeError("Failed parsing a value in the Charge Block!")
+
+    def parse_spin_block(self, spin_block: List[str]):
+        for line in spin_block:
+            tmp = line.strip()
+            try:
+                work = tmp.split(";")
+                index = int(work[0])
+                self.molecules[index].spins[work[1]] = int(work[2])
+            except IndexError:
+                raise RuntimeError("Unknown Atom Index in Spin Block!")
+            except ValueError:
+                raise RuntimeError("Failed parsing a value in the Spin Block!")
+
+    def get_finished_charge_block(self):
+        content = ""
+        for n, mol in enumerate(self.molecules):
+            for index in mol.charges:
+                content += "\n    %d;%s;%f" % (n, index, mol.charges[index])
+        if content:
+            content = "\n<CHARGES>" + content + "\n</CHARGES>"
+        return content
+
+    def get_finished_spin_block(self):
+        content = ""
+        for n, mol in enumerate(self.molecules):
+            for index in mol.spins:
+                content += "\n    %d;%s;%d" % (n, index, mol.spins[index])
+        if content:
+            content = "\n<SPINS>" + content + "\n</SPINS>"
+        return content
+
     def get_finished_config(self) -> str:
         content = "<GEOMETRY>"
         content += "\n    NumberOfParticles=" + str(self.num_entities())
@@ -85,12 +127,16 @@ class OGUILEMGeometryConfig(QObject):
                 content += "\n        " + tmp
             content += "\n    </MOLECULE>"
         content += "\n</GEOMETRY>"
+        content += self.get_finished_charge_block()
+        content += self.get_finished_spin_block()
         return content
 
 
 class OGUILEMMolecule:
     def __init__(self, block: List[str]):
-        self.content = block
+        self.content: List[str] = block
+        self.charges: Dict = dict()
+        self.spins: Dict = dict()
 
     def __str__(self):
         ret = ""
