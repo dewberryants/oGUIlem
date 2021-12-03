@@ -66,6 +66,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
 
     def handle_output(self, incoming: str):
         self.display.insertPlainText(incoming)
+        self.display.verticalScrollBar().setValue(self.display.verticalScrollBar().maximum())
 
 
 class OGUILEMRunWorker(qC.QObject):
@@ -82,12 +83,13 @@ class OGUILEMRunWorker(qC.QObject):
         try:
             args = self.run_cmd.split()
             self.process = subprocess.Popen(args, cwd=self.dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                            text=True)
+                                            encoding='utf-8')
         except FileNotFoundError:
             print("Java path invalid! (FileNotFoundError)")
             self.finished.emit(-1)
-        stdout = iter(self.process.stdout.readline())
-        for line in stdout:
+        for line in self.process.stdout:
+            if line == "":
+                break
             self.output.emit(line)
         self.finished.emit(self.process.returncode)
 
