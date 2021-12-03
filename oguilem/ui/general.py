@@ -1,3 +1,4 @@
+import os
 import traceback
 
 import PyQt5.QtGui as qG
@@ -26,11 +27,6 @@ class OGUILEMApplication(qW.QApplication):
 class OGUILEMMainWindow(qW.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.run_dialog = OGUILEMRunDialog()
-        self.init_ui()
-        conf.file_manager.config_modified.connect(self.update_window_title)
-
-    def init_ui(self):
         if not conf.ui.window_position:
             conf.ui.window_position = ((qW.qApp.desktop().screenGeometry().width() - self.geometry().width()) / 2,
                                        (qW.qApp.desktop().screenGeometry().height() - self.geometry().height()) / 2)
@@ -39,7 +35,12 @@ class OGUILEMMainWindow(qW.QMainWindow):
         x, y = conf.ui.window_position
         width, height = conf.ui.window_size
         self.setGeometry(x, y, width, height)
+        self.output_dialog = OGUILEMRunOutputWindow(self)
+        self.run_dialog = OGUILEMRunDialog(self)
+        self.init_ui()
+        conf.file_manager.config_modified.connect(self.update_window_title)
 
+    def init_ui(self):
         file_menu = self.menuBar().addMenu("File")
         q_open = qW.QAction("Open...", self)
         q_open.triggered.connect(self.open_file_dialog)
@@ -195,10 +196,54 @@ class OGUILEMPresetBox(qW.QComboBox):
             self.reverse = False
 
 
-class OGUILEMRunDialog(qW.QDialog):
-    def __init__(self):
+class OGUILEMRunOutputWindow(qW.QWidget):
+    def __init__(self, parent: OGUILEMMainWindow):
         super().__init__()
+        self.main_window = parent
+        self.display = qW.QTextEdit()
+        self.display.setEnabled(False)
+        layout = qW.QVBoxLayout()
+        layout.addWidget(self.display)
+        layout_btn = qW.QHBoxLayout()
+        layout_btn.addSpacerItem(qW.QSpacerItem(0, 0, hPolicy=qW.QSizePolicy.Expanding))
+        self.terminate_btn = qW.QPushButton("Terminate")
+        self.terminate_btn.clicked.connect(self.terminate_run)
+        layout_btn.addWidget(self.terminate_btn)
+        layout.addLayout(layout_btn)
+        self.setLayout(layout)
+        self.setWindowTitle("Run Output")
+
+    def start_run(self):
+        w = round(self.main_window.width() * 0.4)
+        h = round(self.main_window.height() * 0.4)
+        x = round(self.main_window.x() + self.main_window.width())
+        y = round(self.main_window.y())
+        self.setGeometry(x, y, w, h)
+        self.show()
+        self.terminate_btn.setEnabled(True)
+        # Figure out what to run where
+        try:
+            run_cmd = conf.ui.get_run_command()
+        except RuntimeError as err:
+            self.display.setText(str(err))
+            return
+        directory = os.path.dirname(conf.file_manager.current_filename)
+        self.display.setText("Running '%s' in directory '%s'..." % (run_cmd, directory))
+
+    def terminate_run(self):
+        self.terminate_btn.setEnabled(False)
+        print("Run terminated!")
+
+
+class OGUILEMRunDialog(qW.QDialog):
+    def __init__(self, parent: OGUILEMMainWindow):
+        super().__init__(parent)
+        self.start_run = parent.output_dialog.start_run
         self.setWindowTitle("Run...")
+        w = round(self.parent().width() * 0.6)
+        x = round(self.parent().x() + self.parent().width() * 0.4 / 2)
+        y = round(self.parent().y() + self.parent().height() * 0.4 / 2)
+        self.setGeometry(x, y, w, self.height())
         self.jre_edit = qW.QLineEdit()
         if conf.ui.java_path:
             self.jre_edit.setText(conf.ui.java_path)
@@ -211,6 +256,8 @@ class OGUILEMRunDialog(qW.QDialog):
         self.run_args = qW.QLineEdit()
         if conf.ui.ogo_args:
             self.run_args.setText(conf.ui.ogo_args)
+
+        layout_main = qW.QVBoxLayout()
 
         jre_btn = qW.QPushButton("...")
         jre_btn.setStyleSheet("min-width: 20px; max-width:40px")
@@ -239,7 +286,20 @@ class OGUILEMRunDialog(qW.QDialog):
         layout.addWidget(qW.QLabel("Run Options"), 3, 0)
         layout.addWidget(self.run_args, 3, 1)
 
-        self.setLayout(layout)
+        layout_main.addLayout(layout)
+
+        run_btn = qW.QPushButton("Run!")
+        run_btn.clicked.connect(self.accept)
+        cancel_btn = qW.QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+
+        layout_btns = qW.QHBoxLayout()
+        layout_btns.addWidget(run_btn)
+        layout_btns.addWidget(cancel_btn)
+
+        layout_main.addLayout(layout_btns)
+
+        self.setLayout(layout_main)
 
     def get_jre_path(self):
         file_name, _ = qW.QFileDialog.getOpenFileName(self, "Choose java runtime binary", "")
@@ -259,6 +319,7 @@ class OGUILEMRunDialog(qW.QDialog):
 
     def accept(self) -> None:
         self.update_options()
+        self.start_run()
         super().accept()
 
     def reject(self) -> None:

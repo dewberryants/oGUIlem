@@ -214,6 +214,13 @@ class OGUILEMUIConfig:
         except IOError:
             print("Config file not found. A new one will generate once the program exits.")
 
+    def get_run_command(self):
+        if not all([self.java_path, self.ogo_path, self.ogo_args]):
+            raise RuntimeError("Cannot run ogolem without knowing java and ogolem paths as well as ogolem arguments!")
+        if self.java_vm_variables:
+            return self.java_path + self.java_vm_variables + " -jar " + self.ogo_path + self.ogo_args
+        return self.java_path + " -jar " + self.ogo_path + self.ogo_args
+
     def recover_from_file(self):
         path = os.path.join(find_config_folder(), "oguilem.cfg")
         with open(path, "r") as config:
