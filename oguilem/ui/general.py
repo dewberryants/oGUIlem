@@ -1,4 +1,3 @@
-import os
 import traceback
 
 import PyQt5.QtGui as qG
@@ -11,6 +10,7 @@ from oguilem.ui.advanced import OGUILEMAdvancedTab
 from oguilem.ui.fitness import OGUILEMFitnessTab
 from oguilem.ui.ga import OGUILEMGeneticAlgoTab
 from oguilem.ui.geometry import OGUILEMGeometryTab
+from oguilem.ui.run import OGUILEMRunDialog, OGUILEMRunOutputWindow
 from oguilem.ui.widgets import SmartLineEdit
 
 
@@ -194,134 +194,3 @@ class OGUILEMPresetBox(qW.QComboBox):
             self.reverse = True
             self.setCurrentIndex(self.last_index)
             self.reverse = False
-
-
-class OGUILEMRunOutputWindow(qW.QWidget):
-    def __init__(self, parent: OGUILEMMainWindow):
-        super().__init__()
-        self.main_window = parent
-        self.display = qW.QTextEdit()
-        self.display.setEnabled(False)
-        layout = qW.QVBoxLayout()
-        layout.addWidget(self.display)
-        layout_btn = qW.QHBoxLayout()
-        layout_btn.addSpacerItem(qW.QSpacerItem(0, 0, hPolicy=qW.QSizePolicy.Expanding))
-        self.terminate_btn = qW.QPushButton("Terminate")
-        self.terminate_btn.clicked.connect(self.terminate_run)
-        layout_btn.addWidget(self.terminate_btn)
-        layout.addLayout(layout_btn)
-        self.setLayout(layout)
-        self.setWindowTitle("Run Output")
-
-    def start_run(self):
-        w = round(self.main_window.width() * 0.4)
-        h = round(self.main_window.height() * 0.4)
-        x = round(self.main_window.x() + self.main_window.width())
-        y = round(self.main_window.y())
-        self.setGeometry(x, y, w, h)
-        self.show()
-        self.terminate_btn.setEnabled(True)
-        # Figure out what to run where
-        try:
-            run_cmd = conf.ui.get_run_command()
-        except RuntimeError as err:
-            self.display.setText(str(err))
-            return
-        directory = os.path.dirname(conf.file_manager.current_filename)
-        self.display.setText("Running '%s' in directory '%s'..." % (run_cmd, directory))
-
-    def terminate_run(self):
-        self.terminate_btn.setEnabled(False)
-        print("Run terminated!")
-
-
-class OGUILEMRunDialog(qW.QDialog):
-    def __init__(self, parent: OGUILEMMainWindow):
-        super().__init__(parent)
-        self.start_run = parent.output_dialog.start_run
-        self.setWindowTitle("Run...")
-        w = round(self.parent().width() * 0.6)
-        x = round(self.parent().x() + self.parent().width() * 0.4 / 2)
-        y = round(self.parent().y() + self.parent().height() * 0.4 / 2)
-        self.setGeometry(x, y, w, self.height())
-        self.jre_edit = qW.QLineEdit()
-        if conf.ui.java_path:
-            self.jre_edit.setText(conf.ui.java_path)
-        self.ogo_edit = qW.QLineEdit()
-        if conf.ui.ogo_path:
-            self.ogo_edit.setText(conf.ui.ogo_path)
-        self.vm_args = qW.QLineEdit()
-        if conf.ui.java_vm_variables:
-            self.vm_args.setText(conf.ui.java_vm_variables)
-        self.run_args = qW.QLineEdit()
-        if conf.ui.ogo_args:
-            self.run_args.setText(conf.ui.ogo_args)
-
-        layout_main = qW.QVBoxLayout()
-
-        jre_btn = qW.QPushButton("...")
-        jre_btn.setStyleSheet("min-width: 20px; max-width:40px")
-        jre_btn.clicked.connect(self.get_jre_path)
-
-        ogo_btn = qW.QPushButton("...")
-        ogo_btn.setStyleSheet("min-width: 20px; max-width:40px")
-        ogo_btn.clicked.connect(self.get_ogo_path)
-
-        layout = qW.QGridLayout()
-        layout.addWidget(qW.QLabel("Java Runtime"), 0, 0)
-        layout_jre = qW.QHBoxLayout()
-        layout_jre.addWidget(self.jre_edit)
-        layout_jre.addWidget(jre_btn)
-        layout.addLayout(layout_jre, 0, 1)
-
-        layout.addWidget(qW.QLabel("OGOLEM JAR"), 1, 0)
-        layout_ogo = qW.QHBoxLayout()
-        layout_ogo.addWidget(self.ogo_edit)
-        layout_ogo.addWidget(ogo_btn)
-        layout.addLayout(layout_ogo, 1, 1)
-
-        layout.addWidget(qW.QLabel("Java VM Options"), 2, 0)
-        layout.addWidget(self.vm_args, 2, 1)
-
-        layout.addWidget(qW.QLabel("Run Options"), 3, 0)
-        layout.addWidget(self.run_args, 3, 1)
-
-        layout_main.addLayout(layout)
-
-        run_btn = qW.QPushButton("Run!")
-        run_btn.clicked.connect(self.accept)
-        cancel_btn = qW.QPushButton("Cancel")
-        cancel_btn.clicked.connect(self.reject)
-
-        layout_btns = qW.QHBoxLayout()
-        layout_btns.addWidget(run_btn)
-        layout_btns.addWidget(cancel_btn)
-
-        layout_main.addLayout(layout_btns)
-
-        self.setLayout(layout_main)
-
-    def get_jre_path(self):
-        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Choose java runtime binary", "")
-        if file_name:
-            self.jre_edit.setText(file_name)
-
-    def get_ogo_path(self):
-        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Ogolem Runtime", "", "JAR (*.jar)")
-        if file_name:
-            self.ogo_edit.setText(file_name)
-
-    def update_options(self):
-        conf.ui.java_path = self.jre_edit.text().strip()
-        conf.ui.java_vm_variables = self.vm_args.text().strip()
-        conf.ui.ogo_path = self.ogo_edit.text().strip()
-        conf.ui.ogo_args = self.run_args.text().strip()
-
-    def accept(self) -> None:
-        self.update_options()
-        self.start_run()
-        super().accept()
-
-    def reject(self) -> None:
-        self.update_options()
-        super().reject()
