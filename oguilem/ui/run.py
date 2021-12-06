@@ -2,9 +2,11 @@ import os
 import subprocess
 
 import PyQt5.QtCore as qC
+import PyQt5.QtGui as qG
 import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
+from oguilem.resources import icon
 
 
 class OGUILEMRunOutputWindow(qW.QWidget):
@@ -23,6 +25,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         layout.addLayout(layout_btn)
         self.setLayout(layout)
         self.setWindowTitle("Run Output")
+        self.setWindowIcon(qG.QIcon(icon))
         self.thread = None
         self.worker = None
 
