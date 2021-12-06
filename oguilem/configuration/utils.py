@@ -16,6 +16,7 @@ class ConfigFileManager(QObject):
 
     def signal_saved(self, file_name: str):
         self.unsaved_changes = False
+        self.current_filename = file_name
         self.config_modified.emit(file_name)
 
 
