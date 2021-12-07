@@ -127,7 +127,12 @@ class OGUILEMGeometryConfig(QObject):
                     tmp = re.sub(r"\s+", ";", line.strip())
                 elif re.match("MoleculePath=", line.strip()) and os.path.exists(path):
                     tmp = line.strip().split("=")
-                    tmp = "=".join([tmp[0], os.path.relpath(tmp[1], path)])
+                    current_dir = os.path.dirname(path)
+                    cwd = os.getcwd()
+                    os.chdir(current_dir)
+                    target_dir = os.path.abspath(tmp[1])
+                    tmp = "=".join([tmp[0], os.path.relpath(target_dir, current_dir)])
+                    os.chdir(cwd)
                 else:
                     tmp = line.strip()
                 content += "\n        " + tmp

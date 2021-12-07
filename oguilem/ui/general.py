@@ -85,7 +85,9 @@ class OGUILEMMainWindow(qW.QMainWindow):
             self.setWindowTitle(self.windowTitle().strip() + " *")
 
     def open_file_dialog(self):
-        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...", "", "OGOLEM Config Files (*.ogo)")
+        file_name, _ = qW.QFileDialog.getOpenFileName(self, "Open Config...",
+                                                      directory=conf.file_manager.current_filename,
+                                                      filter="OGOLEM Config Files (*.ogo)")
         if file_name:
             try:
                 conf.load_from_file(file_name)
@@ -98,7 +100,9 @@ class OGUILEMMainWindow(qW.QMainWindow):
                 error_dialog.exec_()
 
     def save_file_dialog(self):
-        file_name, _ = qW.QFileDialog.getSaveFileName(self, "Save Config...", "", "OGOLEM Config Files (*.ogo)")
+        file_name, _ = qW.QFileDialog.getSaveFileName(self, "Save Config...",
+                                                      directory=conf.file_manager.current_filename,
+                                                      filter="OGOLEM Config Files (*.ogo)")
         if file_name:
             conf.save_to_file(file_name)
 

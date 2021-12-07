@@ -94,6 +94,7 @@ class OGUILEMRunWorker(qC.QObject):
             if line == "":
                 break
             self.output.emit(line)
+        self.output.emit(self.process.stderr.read())
         self.finished.emit(self.process.returncode)
 
     def terminate(self):
