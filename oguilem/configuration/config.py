@@ -21,7 +21,7 @@ class OGUILEMConfig:
     def save_to_file(self, path: str):
         content = "###OGOLEM###\n"
         content += self.globopt.get_finished_config()
-        content += self.geometry.get_finished_config()
+        content += self.geometry.get_finished_config(path)
         content += self.fitness.get_finished_config()
         content += self.options.get_finished_config()
         with open(path, "w") as conf_file:

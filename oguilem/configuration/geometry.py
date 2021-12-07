@@ -1,3 +1,4 @@
+import os
 import re
 from typing import List, Dict
 
@@ -115,7 +116,7 @@ class OGUILEMGeometryConfig(QObject):
             content = "\n<SPINS>" + content + "\n</SPINS>"
         return content
 
-    def get_finished_config(self) -> str:
+    def get_finished_config(self, path="") -> str:
         content = "<GEOMETRY>"
         content += "\n    NumberOfParticles=" + str(self.num_entities())
         for molecule in self.molecules:
@@ -124,6 +125,9 @@ class OGUILEMGeometryConfig(QObject):
                 pattern = r"[A-Za-z]+\s+[0-9]+\.?[0-9]?\s"
                 if re.match(pattern, line):
                     tmp = re.sub(r"\s+", ";", line.strip())
+                elif re.match("MoleculePath=", line.strip()) and os.path.exists(path):
+                    tmp = line.strip().split("=")
+                    tmp = "=".join([tmp[0], os.path.relpath(tmp[1], path)])
                 else:
                     tmp = line.strip()
                 content += "\n        " + tmp
