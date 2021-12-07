@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 import PyQt5.QtCore as qC
@@ -7,14 +8,19 @@ import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
 from oguilem.resources import icon
+from oguilem.ui.matplotlib import MoleculeVisualizerWidget
 
 
 class OGUILEMRunOutputWindow(qW.QWidget):
     def __init__(self, parent):
         super().__init__()
         self.main_window = parent
+        self.last_fitness = None
+        self.clock = qC.QTimer()
+        self.clock.timeout.connect(self.update_molecule)
         self.display = qW.QTextEdit()
         self.display.setReadOnly(True)
+        columns = qW.QHBoxLayout()
         layout = qW.QVBoxLayout()
         layout.addWidget(self.display)
         layout_btn = qW.QHBoxLayout()
@@ -23,7 +29,10 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.terminate_btn.clicked.connect(self.terminate_run)
         layout_btn.addWidget(self.terminate_btn)
         layout.addLayout(layout_btn)
-        self.setLayout(layout)
+        self.visualizer = MoleculeVisualizerWidget()
+        columns.addLayout(layout)
+        columns.addWidget(self.visualizer)
+        self.setLayout(columns)
         self.setWindowTitle("Run Output")
         self.setWindowIcon(qG.QIcon(icon))
         self.thread = None
@@ -36,6 +45,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         y = round(self.main_window.y())
         self.setGeometry(x, y, w, h)
         self.display.clear()
+        self.visualizer.clear()
         self.show()
         # Figure out what to run where
         try:
@@ -48,16 +58,34 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.thread = qC.QThread()
         self.worker = OGUILEMRunWorker(run_cmd, directory)
         self.worker.moveToThread(self.thread)
-
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.run_finished)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.output.connect(self.handle_output)
-
         self.terminate_btn.setEnabled(True)
         self.thread.start()
+        self.clock.start(5000)
+
+    def update_molecule(self):
+        wd = os.path.dirname(conf.file_manager.current_filename)
+        bn = ".".join(os.path.basename(conf.file_manager.current_filename).split(".")[:-1])
+        log_file = os.path.join(os.path.join(wd, bn), bn + ".log")
+        pool = os.path.join(os.path.join(wd, bn), "IntermediateClusterPool.bin")
+        if not os.path.exists(log_file):
+            print(log_file, " does not exit!")
+            return
+        with open(log_file, "r") as logfile:
+            line = logfile.readline()
+            while line != "":
+                old_line = line
+                line = logfile.readline()
+        match = re.search(r"fitness\s+(-?[0-9]+\.?[0-9]+)", old_line)
+        if self.last_fitness is None or float(match[1]) < self.last_fitness:
+            self.last_fitness = float(match[1])
+            print("New best was found, fitness: ", match[1])
+            self.visualizer.load_rank_0(pool)
 
     def terminate_run(self):
         if self.worker is not None:
@@ -65,6 +93,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
 
     def run_finished(self, return_code: int):
         self.terminate_btn.setEnabled(False)
+        self.clock.stop()
         print("Run finished: ", return_code)
 
     def handle_output(self, incoming: str):

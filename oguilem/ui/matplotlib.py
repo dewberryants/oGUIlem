@@ -1,11 +1,44 @@
+import glob
+import os
+import subprocess
+
 import matplotlib as mpl
 import numpy as np
-
+from PyQt5.QtWidgets import QFrame, QFormLayout, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
+from oguilem.configuration import conf
+
 mpl.use('Qt5Agg')
+
+
+class MoleculeVisualizerWidget(QFrame):
+    def __init__(self, size=3):
+        super().__init__()
+        layout = QFormLayout()
+        self.canvas = MoleculeVisualizer(size)
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+    def load_rank_0(self, pool: str):
+        cmd = conf.ui.get_run_command("--clusters -i %s -getstructs" % os.path.basename(pool))
+        process = subprocess.Popen(cmd.split(), cwd=os.path.dirname(pool), stderr=subprocess.DEVNULL,
+                                   stdout=subprocess.DEVNULL)
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            return
+        xyz = glob.glob(os.path.join(os.path.dirname(pool), "structs", "rank0*xyz"))
+        if len(xyz) > 0:
+            xyz = xyz[0]
+        if os.path.isfile(xyz):
+            self.canvas.load(XYZFile(xyz))
+
+    def clear(self):
+        self.canvas.reset()
 
 
 class XYZFile:
@@ -53,12 +86,13 @@ def map_symbols_to_radii(symbols: np.ndarray):
 class MoleculeVisualizer(FigureCanvasQTAgg):
     def __init__(self, size):
         fig = Figure(figsize=(size, size), tight_layout={'pad': 0})
-        self.axes = fig.add_subplot(111, projection='3d')
+        self.axes = fig.add_subplot(111, projection='3d', facecolor="black")
         self.axes.axis(False)
         self.axes.set_box_aspect([ub - lb for lb, ub in (getattr(self.axes, f'get_{a}lim')() for a in 'xyz')])
         super().__init__(fig)
 
     def load(self, xyz: XYZFile):
+        self.reset()
         x, y, z = xyz.coordinates
         segments = list()
         for i in range(xyz.bonds.shape[0]):
@@ -66,7 +100,13 @@ class MoleculeVisualizer(FigureCanvasQTAgg):
                 if xyz.bonds[i][j]:
                     segment = ((x[i], y[i], z[i]), (x[j], y[j], z[j]))
                     segments.append(segment)
-        bonds = Line3DCollection(segments, color="gray")
-        print(bonds)
+        bonds = Line3DCollection(segments, color="teal")
         self.axes.add_collection3d(bonds)
-        self.axes.scatter(x, y, z, color="black")
+        self.axes.scatter(x, y, z, color="teal")
+        self.draw()
+
+    def reset(self):
+        self.axes.clear()
+        self.axes.axis(False)
+        self.axes.set_box_aspect([ub - lb for lb, ub in (getattr(self.axes, f'get_{a}lim')() for a in 'xyz')])
+        self.draw()
