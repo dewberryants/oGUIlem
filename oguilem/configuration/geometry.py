@@ -121,7 +121,7 @@ class OGUILEMGeometryConfig(QObject):
         for molecule in self.molecules:
             content += "\n    <MOLECULE>"
             for line in molecule.content:
-                pattern = r"[A-Za-z]+\s+[0-9]+\.[0-9]+\s"
+                pattern = r"[A-Za-z]+\s+[0-9]+\.?[0-9]?\s"
                 if re.match(pattern, line):
                     tmp = re.sub(r"\s+", ";", line.strip())
                 else:
