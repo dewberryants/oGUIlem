@@ -14,6 +14,7 @@ from oguilem.ui.matplotlib import MoleculeVisualizerWidget
 class OGUILEMRunOutputWindow(qW.QWidget):
     def __init__(self, parent):
         super().__init__()
+        self.initial_position = True
         self.main_window = parent
         self.last_fitness = None
         self.clock = qC.QTimer()
@@ -29,7 +30,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.terminate_btn.clicked.connect(self.terminate_run)
         layout_btn.addWidget(self.terminate_btn)
         layout.addLayout(layout_btn)
-        self.visualizer = MoleculeVisualizerWidget()
+        self.visualizer = MoleculeVisualizerWidget(size=5)
         columns.addLayout(layout)
         columns.addWidget(self.visualizer)
         self.setLayout(columns)
@@ -39,11 +40,12 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.worker = None
 
     def start_run(self):
-        w = round(self.main_window.width() * 0.4)
-        h = round(self.main_window.height() * 0.4)
-        x = round(self.main_window.x() + self.main_window.width())
-        y = round(self.main_window.y())
-        self.setGeometry(x, y, w, h)
+        if self.initial_position:
+            w = round(self.main_window.width())
+            h = round(self.main_window.height() * 0.4)
+            x = round(self.main_window.x())
+            y = round(self.main_window.y() + self.main_window.height())
+            self.setGeometry(x, y, w, h)
         self.display.clear()
         self.visualizer.clear()
         self.show()

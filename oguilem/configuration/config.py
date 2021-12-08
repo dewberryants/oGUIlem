@@ -38,13 +38,13 @@ class OGUILEMConfig:
             backend_defs = list()
             charge_block = list()
             spin_block = list()
+            offset = 0
 
             # Separate off blocks
-            start, end = -1, -1
             for n, line in enumerate(iter_content):
                 # Charge and Spin Blocks
                 if line.strip().startswith("<CHARGES>"):
-                    start = n
+                    start = n + offset
                     try:
                         charge_line = next(iter_content).strip()
                     except StopIteration:
@@ -57,8 +57,9 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(charge_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
                 if line.strip().startswith("<SPINS>"):
-                    start = n
+                    start = n + offset
                     try:
                         spin_line = next(iter_content).strip()
                     except StopIteration:
@@ -71,10 +72,11 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <SPINS> tag in configuration!")
                     end = start + len(spin_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
 
                 # Geometry Block
                 if line.strip().startswith("<GEOMETRY>"):
-                    start = n
+                    start = n + offset
                     try:
                         geo_line = next(iter_content).strip()
                     except StopIteration:
@@ -87,11 +89,12 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(geo_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
 
                 # Any Backend Definitions
                 if line.strip().startswith("<CLUSTERBACKEND>"):
                     back_block = list()
-                    start = n
+                    start = n + offset
                     try:
                         back_line = next(iter_content).strip()
                     except StopIteration:
@@ -105,6 +108,7 @@ class OGUILEMConfig:
                     end = start + len(back_block) + 2
                     backend_defs.append(back_block)
                     content = content[:start] + content[end:]
+                    offset -= 1
 
             # Parse them
             self.geometry.parse_from_block(geo_block)

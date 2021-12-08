@@ -22,6 +22,8 @@ class OGUILEMGlobOptConfig:
         self.crossover.set(crossover[1])
 
     def get_finished_config(self):
+        self.mutation.request_update()
+        self.crossover.request_update()
         content = "GlobOptAlgo=cluster{"
         content += "xover(" + self.crossover.value + ")"
         content += "mutation(" + self.mutation.value + ")"
