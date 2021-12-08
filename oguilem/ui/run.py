@@ -30,9 +30,13 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.terminate_btn.clicked.connect(self.terminate_run)
         layout_btn.addWidget(self.terminate_btn)
         layout.addLayout(layout_btn)
+        layout_right = qW.QVBoxLayout()
         self.visualizer = MoleculeVisualizerWidget(size=5)
+        layout_right.addWidget(self.visualizer)
+        self.checkbox = qW.QCheckBox("Update continuously")
+        layout_right.addWidget(self.checkbox)
         columns.addLayout(layout)
-        columns.addWidget(self.visualizer)
+        columns.addLayout(layout_right)
         self.setLayout(columns)
         self.setWindowTitle("Run Output")
         self.setWindowIcon(qG.QIcon(icon))
@@ -43,9 +47,10 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         if self.initial_position:
             w = round(self.main_window.width())
             h = round(self.main_window.height() * 0.4)
-            x = round(self.main_window.x())
-            y = round(self.main_window.y() + self.main_window.height())
+            x = round(self.main_window.x() + 0.2 * self.main_window.height())
+            y = round(self.main_window.y() + 0.2 * self.main_window.height())
             self.setGeometry(x, y, w, h)
+            self.initial_position = False
         self.display.clear()
         self.visualizer.clear()
         self.show()
@@ -71,6 +76,8 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.clock.start(10000)
 
     def update_molecule(self):
+        if not self.checkbox.isChecked():
+            return
         wd = os.path.dirname(conf.file_manager.current_filename)
         bn = ".".join(os.path.basename(conf.file_manager.current_filename).split(".")[:-1])
         log_file = os.path.join(os.path.join(wd, bn), bn + ".log")
@@ -98,6 +105,12 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.clock.stop()
         self.last_fitness = None
         print("Run finished: ", return_code)
+        wd = os.path.dirname(conf.file_manager.current_filename)
+        bn = ".".join(os.path.basename(conf.file_manager.current_filename).split(".")[:-1])
+        pool = os.path.join(os.path.join(wd, bn), "finalPool.bin")
+        if os.path.exists(pool):
+            print("Found finished pool. Loading r0....")
+            self.visualizer.load_rank_0(pool)
 
     def handle_output(self, incoming: str):
         self.display.insertPlainText(incoming)

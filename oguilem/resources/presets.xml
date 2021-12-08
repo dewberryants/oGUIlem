@@ -1,4 +1,5 @@
 <presets>
     <preset name="Molecular Cluster - UFF" file="preset-mol-mm.ogo"/>
     <preset name="Molecular Cluster - xTB" file="preset-mol-qm.ogo"/>
+    <preset name="LJ Cluster - Ar38" file="preset-ar38.ogo"/>
 </presets>
