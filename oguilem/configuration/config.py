@@ -38,13 +38,13 @@ class OGUILEMConfig:
             backend_defs = list()
             charge_block = list()
             spin_block = list()
+            offset = 0
 
             # Separate off blocks
-            start, end = -1, -1
             for n, line in enumerate(iter_content):
                 # Charge and Spin Blocks
                 if line.strip().startswith("<CHARGES>"):
-                    start = n
+                    start = n + offset
                     try:
                         charge_line = next(iter_content).strip()
                     except StopIteration:
@@ -57,8 +57,9 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(charge_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
                 if line.strip().startswith("<SPINS>"):
-                    start = n
+                    start = n + offset
                     try:
                         spin_line = next(iter_content).strip()
                     except StopIteration:
@@ -71,10 +72,11 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <SPINS> tag in configuration!")
                     end = start + len(spin_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
 
                 # Geometry Block
                 if line.strip().startswith("<GEOMETRY>"):
-                    start = n
+                    start = n + offset
                     try:
                         geo_line = next(iter_content).strip()
                     except StopIteration:
@@ -87,11 +89,12 @@ class OGUILEMConfig:
                             raise RuntimeError("Dangling <GEOMETRY> tag in configuration!")
                     end = start + len(geo_block) + 2
                     content = content[:start] + content[end:]
+                    offset -= 1
 
                 # Any Backend Definitions
                 if line.strip().startswith("<CLUSTERBACKEND>"):
                     back_block = list()
-                    start = n
+                    start = n + offset
                     try:
                         back_line = next(iter_content).strip()
                     except StopIteration:
@@ -105,6 +108,7 @@ class OGUILEMConfig:
                     end = start + len(back_block) + 2
                     backend_defs.append(back_block)
                     content = content[:start] + content[end:]
+                    offset -= 1
 
             # Parse them
             self.geometry.parse_from_block(geo_block)
@@ -214,12 +218,13 @@ class OGUILEMUIConfig:
         except IOError:
             print("Config file not found. A new one will generate once the program exits.")
 
-    def get_run_command(self):
+    def get_run_command(self, custom_run_command=""):
+        run_cmd = custom_run_command if custom_run_command else self.ogo_args
         if not all([self.java_path, self.ogo_path, self.ogo_args]):
             raise RuntimeError("Cannot run ogolem without knowing java and ogolem paths as well as ogolem arguments!")
         if self.java_vm_variables:
-            return "%s %s -jar %s %s" % (self.java_path, self.java_vm_variables, self.ogo_path, self.ogo_args)
-        return "%s -jar %s %s" % (self.java_path, self.ogo_path, self.ogo_args)
+            return "%s %s -jar %s %s" % (self.java_path, self.java_vm_variables, self.ogo_path, run_cmd)
+        return "%s -jar %s %s" % (self.java_path, self.ogo_path, run_cmd)
 
     def recover_from_file(self):
         path = os.path.join(find_config_folder(), "oguilem.cfg")

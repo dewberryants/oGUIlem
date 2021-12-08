@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 import PyQt5.QtCore as qC
@@ -7,14 +8,20 @@ import PyQt5.QtWidgets as qW
 
 from oguilem.configuration import conf
 from oguilem.resources import icon
+from oguilem.ui.matplotlib import MoleculeVisualizerWidget
 
 
 class OGUILEMRunOutputWindow(qW.QWidget):
     def __init__(self, parent):
         super().__init__()
+        self.initial_position = True
         self.main_window = parent
+        self.last_fitness = None
+        self.clock = qC.QTimer()
+        self.clock.timeout.connect(self.update_molecule)
         self.display = qW.QTextEdit()
         self.display.setReadOnly(True)
+        columns = qW.QHBoxLayout()
         layout = qW.QVBoxLayout()
         layout.addWidget(self.display)
         layout_btn = qW.QHBoxLayout()
@@ -23,19 +30,29 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.terminate_btn.clicked.connect(self.terminate_run)
         layout_btn.addWidget(self.terminate_btn)
         layout.addLayout(layout_btn)
-        self.setLayout(layout)
+        layout_right = qW.QVBoxLayout()
+        self.visualizer = MoleculeVisualizerWidget(size=5)
+        layout_right.addWidget(self.visualizer)
+        self.checkbox = qW.QCheckBox("Update continuously")
+        layout_right.addWidget(self.checkbox)
+        columns.addLayout(layout)
+        columns.addLayout(layout_right)
+        self.setLayout(columns)
         self.setWindowTitle("Run Output")
         self.setWindowIcon(qG.QIcon(icon))
         self.thread = None
         self.worker = None
 
     def start_run(self):
-        w = round(self.main_window.width() * 0.4)
-        h = round(self.main_window.height() * 0.4)
-        x = round(self.main_window.x() + self.main_window.width())
-        y = round(self.main_window.y())
-        self.setGeometry(x, y, w, h)
+        if self.initial_position:
+            w = round(self.main_window.width())
+            h = round(self.main_window.height() * 0.4)
+            x = round(self.main_window.x() + 0.2 * self.main_window.height())
+            y = round(self.main_window.y() + 0.2 * self.main_window.height())
+            self.setGeometry(x, y, w, h)
+            self.initial_position = False
         self.display.clear()
+        self.visualizer.clear()
         self.show()
         # Figure out what to run where
         try:
@@ -48,16 +65,36 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.thread = qC.QThread()
         self.worker = OGUILEMRunWorker(run_cmd, directory)
         self.worker.moveToThread(self.thread)
-
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.run_finished)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.output.connect(self.handle_output)
-
         self.terminate_btn.setEnabled(True)
         self.thread.start()
+        self.clock.start(10000)
+
+    def update_molecule(self):
+        if not self.checkbox.isChecked():
+            return
+        wd = os.path.dirname(conf.file_manager.current_filename)
+        bn = ".".join(os.path.basename(conf.file_manager.current_filename).split(".")[:-1])
+        log_file = os.path.join(os.path.join(wd, bn), bn + ".log")
+        pool = os.path.join(os.path.join(wd, bn), "IntermediateClusterPool.bin")
+        if not os.path.exists(log_file):
+            print(log_file, " does not exit!")
+            return
+        with open(log_file, "r") as logfile:
+            line = logfile.readline()
+            while line != "":
+                old_line = line
+                line = logfile.readline()
+        match = re.search(r"fitness\s+(-?[0-9]+\.?[0-9]+)", old_line)
+        if self.last_fitness is None or float(match[1]) < self.last_fitness:
+            self.last_fitness = float(match[1])
+            print("New best was found, fitness: ", match[1])
+            self.visualizer.load_rank_0(pool)
 
     def terminate_run(self):
         if self.worker is not None:
@@ -65,7 +102,15 @@ class OGUILEMRunOutputWindow(qW.QWidget):
 
     def run_finished(self, return_code: int):
         self.terminate_btn.setEnabled(False)
+        self.clock.stop()
+        self.last_fitness = None
         print("Run finished: ", return_code)
+        wd = os.path.dirname(conf.file_manager.current_filename)
+        bn = ".".join(os.path.basename(conf.file_manager.current_filename).split(".")[:-1])
+        pool = os.path.join(os.path.join(wd, bn), "finalPool.bin")
+        if os.path.exists(pool):
+            print("Found finished pool. Loading r0....")
+            self.visualizer.load_rank_0(pool)
 
     def handle_output(self, incoming: str):
         self.display.insertPlainText(incoming)

@@ -226,6 +226,7 @@ class MoleculeChargeAndSpinTableDelegate(qW.QStyledItemDelegate):
         super().__init__()
 
     def setModelData(self, editor: qW.QWidget, model: qC.QAbstractItemModel, index: qC.QModelIndex) -> None:
+        editor.setText(editor.text().strip())
         super().setModelData(editor, model, index)
         # The Table is very simple and only has column 0 and 1, so if both hold values, add a new row of empty
         # items, or if both are now empty, remove them, unless they're the last ones.
