@@ -66,7 +66,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         self.worker.output.connect(self.handle_output)
         self.terminate_btn.setEnabled(True)
         self.thread.start()
-        self.clock.start(5000)
+        self.clock.start(10000)
 
     def update_molecule(self):
         wd = os.path.dirname(conf.file_manager.current_filename)
@@ -94,6 +94,7 @@ class OGUILEMRunOutputWindow(qW.QWidget):
     def run_finished(self, return_code: int):
         self.terminate_btn.setEnabled(False)
         self.clock.stop()
+        self.last_fitness = None
         print("Run finished: ", return_code)
 
     def handle_output(self, incoming: str):

@@ -79,6 +79,26 @@ def _parse_presets():
     return sets
 
 
+def _parse_atomics():
+    atomics = dict()
+    tree = parse(pr.resource_stream("oguilem.resources", "atomic.xml"))
+    for node in tree.getroot():
+        try:
+            label = node.attrib["label"]
+        except KeyError:
+            raise IOError("Could not parse atomic.xml because one of the tags was missing the 'label' attribute.")
+        try:
+            radius = float(node.attrib["value"])
+        except (KeyError, ValueError):
+            raise IOError("Could not parse atomic.xml because one of the radius tags was missing a valid value.")
+        try:
+            color = node.attrib["color"]
+        except KeyError:
+            raise IOError("Could not parse atomic.xml because one of the tags was missing the 'color' attribute.")
+        atomics[label] = (radius, color)
+    return atomics
+
+
 class _Node:
     def __init__(self, node):
         self.id = ""
@@ -112,6 +132,7 @@ globopt = _parse_globopt()
 options = _parse_general()
 fitness = _parse_fitness()
 presets = _parse_presets()
+atomics = _parse_atomics()
 icon = pr.resource_filename("oguilem.resources", "ogo.ico")
 
-__all__ = [globopt, options, fitness, presets, icon]
+__all__ = [globopt, options, fitness, presets, icon, atomics]
