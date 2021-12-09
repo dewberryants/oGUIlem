@@ -3,7 +3,6 @@ import os
 import subprocess
 
 import matplotlib as mpl
-import numpy
 import numpy as np
 from PyQt5.QtWidgets import QFrame, QFormLayout, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -78,7 +77,7 @@ class XYZFile:
                 self.coordinates[2][n] = float(line[3])
         self.colors, self.radii = map_colors_and_radii(self.symbols)
         if not bonds and auto_bonds:
-            rsq = numpy.square(self.radii[..., np.newaxis] + self.radii + 0.44)
+            rsq = np.square(self.radii[..., np.newaxis] + self.radii + 0.44)
             dx = self.coordinates[0][..., np.newaxis] - self.coordinates[0]
             dy = self.coordinates[1][..., np.newaxis] - self.coordinates[1]
             dz = self.coordinates[2][..., np.newaxis] - self.coordinates[2]
@@ -87,8 +86,20 @@ class XYZFile:
 
 
 def map_colors_and_radii(symbols: list):
-    return ([atomics[symbol.upper()][1] for symbol in symbols],
-            np.array([atomics[symbol.upper()][0] for symbol in symbols], dtype='float32'))
+    colors = list()
+    radii = list()
+    for symbol in symbols:
+        try:
+            color = atomics[symbol.upper()][1]
+        except KeyError:
+            color = "gray"
+        try:
+            radius = atomics[symbol.upper()][0]
+        except KeyError:
+            radius = 1.5
+        colors.append(color)
+        radii.append(radius)
+    return np.array(colors), np.array(radii)
 
 
 class MoleculeVisualizer(FigureCanvasQTAgg):

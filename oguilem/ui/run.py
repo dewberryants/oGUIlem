@@ -85,11 +85,14 @@ class OGUILEMRunOutputWindow(qW.QWidget):
         if not os.path.exists(log_file):
             print(log_file, " does not exit!")
             return
+        old_line = ""
         with open(log_file, "r") as logfile:
             line = logfile.readline()
             while line != "":
                 old_line = line
                 line = logfile.readline()
+        if not old_line:
+            return
         match = re.search(r"fitness\s+(-?[0-9]+\.?[0-9]+)", old_line)
         if self.last_fitness is None or float(match[1]) < self.last_fitness:
             self.last_fitness = float(match[1])
@@ -129,18 +132,22 @@ class OGUILEMRunWorker(qC.QObject):
 
     def run(self):
         try:
-            args = self.run_cmd.split()
-            self.process = subprocess.Popen(args, cwd=self.dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                            encoding='utf-8')
-        except FileNotFoundError:
-            print("Java path invalid! (FileNotFoundError)")
-            self.finished.emit(-1)
-        for line in self.process.stdout:
-            if line == "":
-                break
-            self.output.emit(line)
-        self.output.emit(self.process.stderr.read())
-        self.finished.emit(self.process.returncode)
+            try:
+                args = self.run_cmd.split()
+                self.process = subprocess.Popen(args, cwd=self.dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                encoding='utf-8')
+            except FileNotFoundError:
+                print("Java path invalid! (FileNotFoundError)")
+                self.finished.emit(-1)
+            for line in self.process.stdout:
+                if line == "":
+                    break
+                self.output.emit(line)
+            self.output.emit(self.process.stderr.read())
+            self.finished.emit(self.process.returncode)
+        except:
+            print("Run died because of an unforeseen error.")
+            self.finished.emit(-42)
 
     def terminate(self):
         if self.process is not None:
@@ -157,6 +164,7 @@ class OGUILEMRunDialog(qW.QDialog):
         x = round(self.parent().x() + self.parent().width() * 0.4 / 2)
         y = round(self.parent().y() + self.parent().height() * 0.4 / 2)
         self.setGeometry(x, y, w, self.height())
+        conf.ui.recover_from_file()
         self.jre_edit = qW.QLineEdit()
         if conf.ui.java_path:
             self.jre_edit.setText(conf.ui.java_path)
@@ -229,6 +237,7 @@ class OGUILEMRunDialog(qW.QDialog):
         conf.ui.java_vm_variables = self.vm_args.text().strip()
         conf.ui.ogo_path = self.ogo_edit.text().strip()
         conf.ui.ogo_args = self.run_args.text().strip()
+        conf.ui.save_to_file()
 
     def accept(self) -> None:
         self.update_options()

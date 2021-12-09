@@ -9,7 +9,7 @@ GlobOptAlgo=cluster{xover(sweden:)mutation(montecarlo:mode=some)}
         H;0.0;1.0;0.0
     </MOLECULE>
 </GEOMETRY>
-LocOptAlgo=lbfgs:backend=universal
+LocOptAlgo=lbfgs:backend=xyz:universal
 PoolSize=64
 NumberOfGlobIterations=10000
 MutationPossibility=0.2
