@@ -4,7 +4,8 @@ try:
     from oguilem.ui.general import OGUILEMApplication
     from oguilem.configuration import conf
 except ModuleNotFoundError:
-    print("Please install this module (pip install) before using! Alternatively, add to PYTHONPATH.")
+    print("Please install this module (pip install) before using! Alternatively, add to PYTHONPATH. If you have already"
+          " done so, this might be caused by a missing Matplotlib or Numpy Requirement!")
     sys.exit(1)
 
 app = OGUILEMApplication(sys.argv)

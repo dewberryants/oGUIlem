@@ -10,7 +10,7 @@ packages = find_packages()
 
 setup(
     name='OGUILEM',
-    version='0.0.1',
+    version='0.0.5',
     description='A GUI for OGOLEM',
     long_description=readme,
     author='Dominik Behrens',
@@ -18,5 +18,6 @@ setup(
     url='https://github.com/dewberryants/oGUIlem',
     license=lic,
     packages=packages,
+    install_requires=['matplotlib' , 'numpy'],
     package_data={'': ['*.xml', '*.ico', '*.ogo']}
 )

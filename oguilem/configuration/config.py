@@ -211,12 +211,7 @@ class OGUILEMUIConfig:
         self.ogo_path = None
         self.ogo_args = None
         self.environmental_variables = None
-        try:
-            self.recover_from_file()
-        except ValueError:
-            print("There are format errors in the UI config file in '%s'. Using defaults." % find_config_folder())
-        except IOError:
-            print("Config file not found. A new one will generate once the program exits.")
+        self.recover_from_file()
 
     def get_run_command(self, custom_run_command=""):
         run_cmd = custom_run_command if custom_run_command else self.ogo_args
@@ -228,24 +223,29 @@ class OGUILEMUIConfig:
 
     def recover_from_file(self):
         path = os.path.join(find_config_folder(), "oguilem.cfg")
-        with open(path, "r") as config:
-            lines = config.readlines()
-        for line in lines:
-            work = line.strip()
-            if work.startswith("WINDOWSIZE"):
-                self.window_size = (int(work.split()[1]), int(work.split()[2]))
-            elif work.startswith("WINDOWPOS"):
-                self.window_position = (int(work.split()[1]), int(work.split()[2]))
-            elif work.startswith("JAVAPATH"):
-                self.java_path = work[8:].strip()
-            elif work.startswith("JAVAVM"):
-                self.java_vm_variables = work[6:].strip()
-            elif work.startswith("OGOPATH"):
-                self.ogo_path = work[7:].strip()
-            elif work.startswith("OGOARGS"):
-                self.ogo_args = work[7:].strip()
-            elif work.startswith("ENV"):
-                self.environmental_variables = work[3:].strip()
+        try:
+            with open(path, "r") as config:
+                lines = config.readlines()
+            for line in lines:
+                work = line.strip()
+                if work.startswith("WINDOWSIZE"):
+                    self.window_size = (int(work.split()[1]), int(work.split()[2]))
+                elif work.startswith("WINDOWPOS"):
+                    self.window_position = (int(work.split()[1]), int(work.split()[2]))
+                elif work.startswith("JAVAPATH"):
+                    self.java_path = work[8:].strip()
+                elif work.startswith("JAVAVM"):
+                    self.java_vm_variables = work[6:].strip()
+                elif work.startswith("OGOPATH"):
+                    self.ogo_path = work[7:].strip()
+                elif work.startswith("OGOARGS"):
+                    self.ogo_args = work[7:].strip()
+                elif work.startswith("ENV"):
+                    self.environmental_variables = work[3:].strip()
+        except ValueError:
+            print("There are format errors in the UI config file in '%s'. Using defaults." % find_config_folder())
+        except IOError:
+            print("Config file not found. A new one will generate once the program exits.")
 
     def save_to_file(self):
         path = os.path.join(find_config_folder(), "oguilem.cfg")

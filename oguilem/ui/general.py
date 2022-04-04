@@ -34,7 +34,7 @@ class OGUILEMMainWindow(qW.QMainWindow):
             conf.ui.window_size = (self.geometry().width(), self.geometry().height())
         x, y = conf.ui.window_position
         width, height = conf.ui.window_size
-        self.setGeometry(x, y, width, height)
+        self.setGeometry(int(x), int(y), int(width), int(height))
         self.output_dialog = OGUILEMRunOutputWindow(self)
         self.run_dialog = OGUILEMRunDialog(self)
         self.init_ui()
